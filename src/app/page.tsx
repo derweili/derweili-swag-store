@@ -6,10 +6,14 @@ const Home = async () => {
   return (
     <>
       <HeroSection />
-      <PromoBanner title="Promotion" description="Promotion description" promoCode="PROMO123" />
+      <PromoBanner
+        title="Promotion"
+        description="Promotion description"
+        promoCode="PROMO123"
+      />
       <FeaturedProducts />
     </>
   );
-}
+};
 
 export default Home;

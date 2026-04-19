@@ -1,7 +1,6 @@
-import { Product } from "@/lib/storeApi/schema/product";
 import Image from "next/image";
 import Link from "next/link";
-
+import type { Product } from "@/lib/storeApi/schema/product";
 
 type ProductCardProps = {
   product: Product;
@@ -11,7 +10,7 @@ type ProductCardProps = {
 const ProductCard = ({ product, imagePriority = false }: ProductCardProps) => {
   // const isOutOfStock = product.stock === 0;
 
-  if(!product ) {
+  if (!product) {
     return null;
   }
 
@@ -21,8 +20,8 @@ const ProductCard = ({ product, imagePriority = false }: ProductCardProps) => {
         <Image
           src={product.images[0]}
           alt={product.name}
-					width={320}
-					height={426}
+          width={320}
+          height={426}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           priority={imagePriority}
         />

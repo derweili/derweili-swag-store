@@ -66,7 +66,7 @@ export async function fetchApi(
   schema?: SchemaWithParse,
 ): Promise<ApiSuccessEnvelope | unknown> {
   const url = `${baseUrl}${input.startsWith("/") ? input : `/${input}`}`;
-  console.log('fetchApi url:', url);
+  console.log("fetchApi url:", url);
   const headers = {
     ...(init?.headers || {}),
     "x-vercel-protection-bypass": serverEnv.SWAG_STORE_API_KEY,
@@ -83,7 +83,7 @@ export async function fetchApi(
   if (isApiErrorResponse(json)) {
     const { code, message, details } = json.error;
 
-    console.error('fetchApi failed:', code, message, details);
+    console.error("fetchApi failed:", code, message, details);
     throw new Error(message);
   }
 

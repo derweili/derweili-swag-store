@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
   images: {
     domains: [
       "images.unsplash.com",
-      "i8qy5y6gxkdgdcv9.public.blob.vercel-storage.com"
+      "i8qy5y6gxkdgdcv9.public.blob.vercel-storage.com",
     ],
   },
   async headers() {

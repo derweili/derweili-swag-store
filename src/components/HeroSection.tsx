@@ -1,15 +1,19 @@
-import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const HeroSection = () => {
   return (
     <section className="relative flex min-h-[calc(100vh-113px)] items-center overflow-hidden border-b border-border">
       {/* Grid background */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
-        backgroundSize: "60px 60px",
-      }} />
+      <div
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
 
       <div className="container mx-auto relative z-10">
         <div className="max-w-4xl">
@@ -24,8 +28,8 @@ const HeroSection = () => {
           </h1>
 
           <p className="mt-8 max-w-md text-lg text-muted-foreground leading-relaxed">
-            Premium streetwear for those who refuse to blend in. 
-            Limited drops, unlimited attitude.
+            Premium streetwear for those who refuse to blend in. Limited drops,
+            unlimited attitude.
           </p>
 
           <div className="mt-10 flex gap-4">
