@@ -11,4 +11,5 @@ const serverEnvSchema = z.object({
 
 export const serverEnv = serverEnvSchema.parse({
 	IS_DEVELOPMENT: process.env.VERCEL_ENV === "development",
+	SWAG_STORE_API_URL: process.env.SWAG_STORE_API_URL,
 });

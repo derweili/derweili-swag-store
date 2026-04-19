@@ -25,6 +25,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   cacheComponents: true,
+  images: {
+    domains: ["images.unsplash.com"],
+  },
   async headers() {
     return [
       {
