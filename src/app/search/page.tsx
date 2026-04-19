@@ -1,4 +1,5 @@
 import ProductCard from "@/components/ProductCard";
+import { fetchProducts } from "@/lib/storeApi/fetchProducts";
 import { Search as SearchIcon, Loader2 } from "lucide-react";
 
 const categories = ["All", "Category 1", "Category 2", "Category 3"];
@@ -11,7 +12,9 @@ const displayResults = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 const query = "";
 
-const SearchPage = () => {
+const SearchPage = async () => {
+
+  const products = await fetchProducts();
 
   return (
       <div className="container mx-auto pt-24 pb-20">
@@ -57,8 +60,8 @@ const SearchPage = () => {
           </div>
         ) : displayResults.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-5">
-            {displayResults.map((product) => (
-              <ProductCard key={product} />
+            {products.map((product, index) => (
+              <ProductCard key={product.id} product={product} imagePriority={index < 5} />
             ))}
           </div>
         ) : (

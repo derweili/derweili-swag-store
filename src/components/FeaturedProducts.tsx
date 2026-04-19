@@ -1,6 +1,12 @@
 import ProductCard from "@/components/ProductCard";
+import { fetchProducts } from "@/lib/storeApi/fetchProducts";
 
-const FeaturedProducts = () => {
+const FeaturedProducts = async () => {
+  const products = await fetchProducts();
+
+  // get first 6 featured products
+  const featuredProducts = products.slice(0, 8);
+
   return (
     <section className="py-20">
       <div className="container mx-auto">
@@ -19,8 +25,8 @@ const FeaturedProducts = () => {
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <ProductCard key={`product-${index}`} />
+          {featuredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </div>

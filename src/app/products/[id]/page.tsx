@@ -1,26 +1,29 @@
 import { Button } from "@/components/ui/button";
+import { fetchProduct } from "@/lib/storeApi/fetchProduct";
 import { Minus, Plus, ShoppingBag, ArrowLeft, Check, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 type cartStateType = "idle" | "loading" | "added";
 
 const cartState : cartStateType = "idle" as cartStateType;
 
-const product = {
-  id: 1,
-  name: "Product 1",
-  image: "https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=600&h=700&fit=crop",
-  price: 100,
-  stock: 10,
-	category: "Category 1",
-	description: "Description 1",
-	quantity: 1,
-};
-
 const quantity = 1;
 
-const ProductDetail = () => {
+const ProductDetail = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) => {
+
+  const { id } = await params;
+
+  const product = await fetchProduct(id);
+
+  if(!product) {
+    return notFound();
+  }
 
   const isOutOfStock = false;
   const isLowStock = false;
@@ -40,7 +43,7 @@ const ProductDetail = () => {
             <Image
 							width={652}
 							height={869}
-              src={product.image}
+              src={product.images[0]}
               alt={product.name}
               className="h-full w-full object-cover"
             />
@@ -62,7 +65,7 @@ const ProductDetail = () => {
               {product.name}
             </h1>
             <p className="mt-4 text-3xl font-bold text-accent font-display">
-              ${product.price.toFixed(2)}
+              ${(product.price / 100).toFixed(2)}
             </p>
 
             <p className="mt-6 text-muted-foreground leading-relaxed">
@@ -77,11 +80,11 @@ const ProductDetail = () => {
                 </span>
               ) : isLowStock ? (
                 <span className="text-sm font-semibold uppercase tracking-wider text-neon-pink animate-pulse-neon">
-                  Only {product.stock} left
+                  Only 23 left
                 </span>
               ) : (
                 <span className="text-sm font-semibold uppercase tracking-wider text-accent">
-                  In Stock — {product.stock} available
+                  In Stock — 23 available
                 </span>
               )}
             </div>

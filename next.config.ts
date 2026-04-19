@@ -26,7 +26,10 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   cacheComponents: true,
   images: {
-    domains: ["images.unsplash.com"],
+    domains: [
+      "images.unsplash.com",
+      "i8qy5y6gxkdgdcv9.public.blob.vercel-storage.com"
+    ],
   },
   async headers() {
     return [
