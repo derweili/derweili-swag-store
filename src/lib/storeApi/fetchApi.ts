@@ -66,7 +66,7 @@ export async function fetchApi(
   schema?: SchemaWithParse,
 ): Promise<ApiSuccessEnvelope | unknown> {
   const url = `${baseUrl}${input.startsWith("/") ? input : `/${input}`}`;
-  console.log("fetchApi url:", url);
+
   const headers = {
     ...(init?.headers || {}),
     "x-vercel-protection-bypass": serverEnv.SWAG_STORE_API_KEY,
