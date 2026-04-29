@@ -1,5 +1,5 @@
 import ProductCard from "@/components/ProductCard";
-import { fetchProducts } from "@/lib/storeApi/fetchProducts";
+import { fetchProducts } from "@/lib/storeApi/products";
 
 const FeaturedProducts = async () => {
   const products = await fetchProducts();

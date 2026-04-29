@@ -1,9 +1,12 @@
 import type { NextConfig } from "next";
 import { serverEnv } from "@/lib/env/serverEnv";
 
+const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
+
+console.log("IS_DEVELOPMENT", process.env.NODE_ENV);
 const cspHeader = `
   default-src 'self';
-  script-src 'self'
+  script-src 'self' 'unsafe-inline' ${IS_DEVELOPMENT ? "'unsafe-eval'" : ""}
       https://*.vercel-scripts.com
       https://vercel.live
       https://*.vercel.live;

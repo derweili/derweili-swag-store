@@ -1,7 +1,8 @@
 import { Search, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 
-const Navbar = () => {
+const Navbar = ({ miniCart }: { miniCart: React.ReactNode }) => {
   return (
     <nav className="sticky top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between">
@@ -34,15 +35,7 @@ const Navbar = () => {
           >
             <Search className="h-5 w-5" />
           </Link>
-          <button
-            type="button"
-            className="relative text-muted-foreground transition-colors hover:text-accent"
-          >
-            <ShoppingBag className="h-5 w-5" />
-            <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center bg-accent text-[10px] font-bold text-accent-foreground">
-              0
-            </span>
-          </button>
+          {miniCart}
         </div>
       </div>
     </nav>

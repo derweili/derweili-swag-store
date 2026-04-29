@@ -1,6 +1,6 @@
 import { Loader2, Search as SearchIcon } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
-import { fetchProducts } from "@/lib/storeApi/fetchProducts";
+import { fetchProducts } from "@/lib/storeApi/products";
 
 const categories = ["All", "Category 1", "Category 2", "Category 3"];
 const loading = false;

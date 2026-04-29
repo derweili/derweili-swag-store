@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
+import { CartIcon } from "@/components/CartIcon";
 import Navbar from "@/components/NavBar";
+import { MiniCart } from "@/lib/cart/component/MiniCart";
 import { cn } from "@/lib/utils";
 
 const spaceGrotesk = Space_Grotesk({
@@ -22,7 +25,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn(spaceGrotesk.variable, "font-sans")}>
       <body className="antialiased">
-        <Navbar />
+        <Navbar
+          miniCart={
+            <Suspense fallback={<CartIcon numberOfItems={0} />}>
+              <MiniCart />
+            </Suspense>
+          }
+        />
         {children}
       </body>
     </html>

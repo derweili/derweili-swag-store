@@ -1,0 +1,17 @@
+import { ShoppingBag } from "lucide-react";
+
+export const CartIcon = ({ numberOfItems }: { numberOfItems: number }) => {
+  return (
+    <button
+      type="button"
+      className="relative text-muted-foreground transition-colors hover:text-accent"
+    >
+      <ShoppingBag className="h-5 w-5" />
+      {numberOfItems > 0 && (
+        <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center bg-accent text-[10px] font-bold text-accent-foreground">
+          {numberOfItems}
+        </span>
+      )}
+    </button>
+  );
+};
