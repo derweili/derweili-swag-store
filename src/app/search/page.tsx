@@ -1,9 +1,19 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { fetchProductCategories } from "@/lib/storeApi/products";
 import SearchControls from "./_components/SearchControls";
 import SearchControlsSkeleton from "./_components/SearchControlsSkeleton";
 import SearchResults from "./_components/SearchResults";
 import SearchResultsSkeleton from "./_components/SearchResultsSkeleton";
+
+export const metadata: Metadata = {
+  title: "Search",
+  description: "Search and filter products in our store.",
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 type SearchPageProps = {
   searchParams: Promise<{ q?: string; category?: string }>;

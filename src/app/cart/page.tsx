@@ -1,4 +1,5 @@
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getCartToken } from "@/lib/cart/cartToken";
@@ -6,6 +7,14 @@ import { fetchCart } from "@/lib/storeApi/fetchCart";
 import CartContents from "./_components/CartContents";
 import { CartPageSkeleton } from "./_components/CartPageSkeleton";
 import { EmptyCart } from "./_components/EmptyCart";
+
+export const metadata: Metadata = {
+  title: "Cart",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 async function CartBody() {
   const token = await getCartToken();

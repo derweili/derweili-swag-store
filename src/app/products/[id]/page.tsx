@@ -1,18 +1,54 @@
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { fetchProduct } from "@/lib/storeApi/products";
+import type { Product as SchemaProduct, WithContext } from "schema-dts";
+import { JsonLd } from "@/lib/seo/components/JsonLd";
+import { fetchProduct, fetchProducts } from "@/lib/storeApi/products";
 import { AddToCart } from "./_components/AddToCart";
 import { AddToCartSkeleton } from "./_components/AddToCartSkeleton";
+
+export async function generateStaticParams() {
+  const products = await fetchProducts({});
+  return products.map((p) => ({ id: p.id }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const product = await fetchProduct(id);
+
+  if (!product) return {};
+
+  return {
+    title: product.name,
+    description: product.description,
+    openGraph: {
+      type: "website",
+      title: product.name,
+      description: product.description,
+      images: product.images[0]
+        ? [{ url: product.images[0], alt: product.name }]
+        : [],
+    },
+    twitter: {
+      title: product.name,
+      description: product.description,
+      images: product.images[0] ? [product.images[0]] : [],
+    },
+  };
+}
 
 const ProductDetail = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) => {
-  "use cache";
   const { id } = await params;
 
   const product = await fetchProduct(id);
@@ -21,8 +57,24 @@ const ProductDetail = async ({
     return notFound();
   }
 
+  const jsonLd: WithContext<SchemaProduct> = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.images,
+    category: product.category,
+    offers: {
+      "@type": "Offer",
+      price: (product.price / 100).toFixed(2),
+      priceCurrency: product.currency,
+      availability: "https://schema.org/InStock",
+    },
+  };
+
   return (
     <div className="container mx-auto pt-24 pb-20">
+      <JsonLd data={jsonLd} />
       <Link
         href="/"
         className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-accent font-display uppercase tracking-wider"

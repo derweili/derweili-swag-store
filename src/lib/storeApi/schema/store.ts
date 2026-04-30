@@ -6,7 +6,7 @@ export const StoreConfig = z.object({
   seo: z.object({
     defaultDescription: z.string(),
     defaultTitle: z.string(),
-    titleTemplate: z.array(z.string()),
+    titleTemplate: z.string(),
   }),
   socialLinks: z.object({
     discord: z.string(),

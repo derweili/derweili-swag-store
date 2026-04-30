@@ -2,9 +2,7 @@ import { cookies } from "next/headers";
 import { createNewCart } from "../storeApi/fetchCart";
 
 export async function getCartToken(): Promise<string | undefined> {
-  console.log("getCartToken");
   const cookieStore = await cookies();
-  console.log("getCartToken cookieStore", cookieStore.get("cart_id"));
   return cookieStore.get("cart_id")?.value;
 }
 

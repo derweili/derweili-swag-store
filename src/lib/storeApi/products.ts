@@ -91,7 +91,10 @@ export async function fetchProductsForSearchRoute(
   return { hasSearchQuery, products };
 }
 
-export const fetchProduct = async (id: string) => {
+export async function fetchProduct(id: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("store-products", `product-${id}`);
   const product = await fetchApi(
     `/products/${id}`,
     {
@@ -101,4 +104,4 @@ export const fetchProduct = async (id: string) => {
   );
 
   return product;
-};
+}
