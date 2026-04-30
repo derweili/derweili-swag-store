@@ -5,7 +5,7 @@ import { PromotionSchema } from "./schema/promotion";
 
 /** Uncached API read; prefer `fetchPromotionForHome` on the homepage. */
 export async function fetchPromotion(): Promise<Promotion> {
-  return fetchApi(`/promotions`, { cache: "force-cache" }, PromotionSchema);
+  return fetchApi(`/promotions`, undefined, PromotionSchema);
 }
 
 /**

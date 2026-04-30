@@ -29,7 +29,7 @@ async function CartBody() {
 
 export default function CartPage() {
   return (
-    <div className="container mx-auto pt-24 pb-20 max-w-4xl">
+    <div className="container mx-auto pt-8 md:pt-24 pb-20 max-w-4xl px-2">
       <Link
         href="/search"
         className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-accent font-display uppercase tracking-wider"

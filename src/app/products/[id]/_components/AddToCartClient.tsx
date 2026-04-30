@@ -1,7 +1,8 @@
 "use client";
 import { Check, Loader2, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { startTransition, useOptimistic, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { QuantitySelect } from "@/components/QuantitySelect";
 import { Button } from "@/components/ui/button";
 import { addToCart } from "@/lib/cart/actions";
@@ -16,19 +17,17 @@ export function AddToCartClient({
   stock: Stock;
 }) {
   const { inStock, lowStock, stock: maxQuantity } = stock;
+  const router = useRouter();
 
-  const [pending, setPending] = useOptimistic(false);
-
+  const [isPending, startTransition] = useTransition();
   const [isAdded, setIsAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
-  async function handleClick() {
-    console.log("handleClick", productId);
+  function handleClick() {
     startTransition(async () => {
-      console.log("Adding to cart", productId);
-      setPending(true);
       setIsAdded(true);
       await addToCart(productId, quantity);
+      router.refresh();
     });
   }
 
@@ -60,22 +59,22 @@ export function AddToCartClient({
         variant={isAdded ? "default" : "neon"}
         className={`mt-8 w-full transition-all ${isAdded ? "bg-green-600 hover:bg-green-600 text-white" : ""}`}
         size="xl"
-        disabled={!inStock || pending}
+        disabled={!inStock || isPending}
         onClick={handleClick}
       >
-        {pending && (
+        {isPending && (
           <>
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             Adding...
           </>
         )}
-        {!pending && !isAdded && (
+        {!isPending && !isAdded && (
           <>
             <ShoppingBag className="mr-2 h-5 w-5" />
             Add to Cart
           </>
         )}
-        {!pending && isAdded && (
+        {!isPending && isAdded && (
           <>
             <Check className="mr-2 h-5 w-5" />
             Added to Cart

@@ -12,7 +12,8 @@
       "Bash(npm run *)",
       "Bash(curl -s \"https://vercel-swag-store-api.vercel.app/api/store/config\" -H \"x-vercel-protection-bypass: OykROcuULI6YJwAwk3VnWv4gMMbpAq6q\")",
       "Bash(python3 -m json.tool)",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(grep -E \"\\(^[^/]*$|/src/|/app/|package\\\\.json|next\\\\.config\\)\")"
     ]
   }
 }

@@ -4,12 +4,7 @@ import { CartWithProductsSchema } from "./schema/cart";
 export const fetchCart = async (token: string) => {
   const cart = await fetchApi(
     "/cart",
-    {
-      cache: "no-store",
-      headers: {
-        "x-cart-token": token,
-      },
-    },
+    { headers: { "x-cart-token": token } },
     CartWithProductsSchema,
   );
   return cart;

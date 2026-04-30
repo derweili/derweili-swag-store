@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 const HeroSection = () => {
   return (
-    <section className="relative flex min-h-[calc(100vh-113px)] items-center overflow-hidden border-b border-border">
+    <section className="relative flex min-h-[calc(100vh-113px)] items-center overflow-hidden border-b border-border px-2">
       {/* Grid background */}
       <div
         className="absolute inset-0 opacity-[0.03]"
@@ -33,7 +33,7 @@ const HeroSection = () => {
             unlimited attitude.
           </p>
 
-          <div className="mt-10 flex gap-4">
+          <div className="mt-10 flex gap-4 flex-wrap">
             <Button variant="neon" size="xl" asChild>
               <Link href="/search">
                 Shop Now <ArrowRight className="ml-1 h-5 w-5" />

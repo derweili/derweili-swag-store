@@ -7,7 +7,6 @@ export async function getCartToken(): Promise<string | undefined> {
 }
 
 export async function setCartToken(cartId: string) {
-  console.log("setCartToken", cartId);
   const cookieStore = await cookies();
   cookieStore.set("cart_id", cartId, {
     httpOnly: true,
@@ -21,11 +20,8 @@ export async function getOrCreateCartToken(): Promise<string> {
   const cartId = await getCartToken();
 
   if (cartId) {
-    console.log("getOrCreateCartToken cartId", cartId);
     return cartId;
   }
-
-  console.log("getOrCreateCartToken creating new cart");
 
   const res = await createNewCart();
   await setCartToken(res.token);

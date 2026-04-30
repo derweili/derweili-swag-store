@@ -130,7 +130,7 @@ const CartContents = ({
                     </button>
                   </div>
 
-                  <div className="flex items-end justify-between gap-2 mt-2">
+                  <div className="flex items-end flex-wrap justify-between gap-2 mt-2">
                     <div className="flex items-center border border-border">
                       <button
                         type="button"

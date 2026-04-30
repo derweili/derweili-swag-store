@@ -9,5 +9,5 @@ export const clientEnvSchema = z.object({
 });
 
 export const clientEnv = clientEnvSchema.parse({
-  ENV: process.env.NODE_ENV,
+  NODE_ENV: process.env.NODE_ENV,
 });

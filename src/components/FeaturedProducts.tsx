@@ -5,7 +5,7 @@ const FeaturedProducts = async () => {
   const featuredProducts = await fetchFeaturedProductsForHome();
 
   return (
-    <section className="py-20">
+    <section className="py-20 px-2">
       <div className="container mx-auto">
         <div className="mb-12 flex items-end justify-between">
           <div>

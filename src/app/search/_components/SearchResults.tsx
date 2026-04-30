@@ -1,4 +1,3 @@
-import { cacheLife, cacheTag } from "next/cache";
 import ProductCard from "@/components/ProductCard";
 import { fetchProductsForSearchRoute } from "@/lib/storeApi/products";
 
@@ -11,10 +10,6 @@ const SearchResults = async ({
   query: rawQuery,
   category: rawCategory,
 }: SearchResultsProps) => {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag("store-products", "product-search");
-
   const category = rawCategory?.trim() || "All";
   const query = rawQuery?.trim();
 

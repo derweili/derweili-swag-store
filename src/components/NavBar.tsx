@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const Navbar = ({ miniCart }: { miniCart: React.ReactNode }) => {
   return (
-    <nav className="sticky top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+    <nav className="sticky top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-md px-2">
       <div className="container mx-auto flex h-16 items-center justify-between">
         <Link
           href="/"

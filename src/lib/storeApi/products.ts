@@ -29,14 +29,7 @@ export const fetchProducts = async ({
   const qs = queryParams.toString();
   const path = qs === "" ? "/products" : `/products?${qs}`;
 
-  const products = await fetchApi(
-    path,
-    {
-      cache: "force-cache",
-      next: { tags: ["store-products"] },
-    },
-    z.array(ProductSchema),
-  );
+  const products = await fetchApi(path, undefined, z.array(ProductSchema));
   return products;
 };
 
@@ -95,13 +88,7 @@ export async function fetchProduct(id: string) {
   "use cache";
   cacheLife("hours");
   cacheTag("store-products", `product-${id}`);
-  const product = await fetchApi(
-    `/products/${id}`,
-    {
-      cache: "force-cache",
-    },
-    ProductSchema,
-  );
+  const product = await fetchApi(`/products/${id}`, undefined, ProductSchema);
 
   return product;
 }

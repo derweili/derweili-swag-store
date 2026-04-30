@@ -11,13 +11,16 @@ import { getOrCreateCartToken } from "./cartToken";
 
 function revalidateCartSurfaces() {
   revalidatePath("/cart");
-  revalidatePath("/", "layout");
 }
 
-export async function addToCart(productId: string, quantity: number) {
+export async function addToCart(
+  productId: string,
+  quantity: number,
+): Promise<Cart> {
   const cartToken = await getOrCreateCartToken();
-  await addItemToCart(cartToken, productId, quantity);
+  const cart = await addItemToCart(cartToken, productId, quantity);
   revalidateCartSurfaces();
+  return cart;
 }
 
 export async function updateCartItem(

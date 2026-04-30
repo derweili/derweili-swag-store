@@ -73,7 +73,7 @@ const ProductDetail = async ({
   };
 
   return (
-    <div className="container mx-auto pt-24 pb-20">
+    <div className="container mx-auto pt-8 md:pt-24 pb-20">
       <JsonLd data={jsonLd} />
       <Link
         href="/"
@@ -95,7 +95,7 @@ const ProductDetail = async ({
         </div>
 
         {/* Info */}
-        <div className="flex flex-col justify-center">
+        <div className="flex flex-col justify-center px-2 md:px-0">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-accent mb-3">
             {product.category}
           </p>
