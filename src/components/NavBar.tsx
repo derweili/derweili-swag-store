@@ -1,6 +1,5 @@
-import { Search, ShoppingBag } from "lucide-react";
+import { Search } from "lucide-react";
 import Link from "next/link";
-import { Suspense } from "react";
 
 const Navbar = ({ miniCart }: { miniCart: React.ReactNode }) => {
   return (

@@ -1,11 +1,8 @@
 import ProductCard from "@/components/ProductCard";
-import { fetchProducts } from "@/lib/storeApi/products";
+import { fetchFeaturedProductsForHome } from "@/lib/storeApi/products";
 
 const FeaturedProducts = async () => {
-  const products = await fetchProducts();
-
-  // get first 6 featured products
-  const featuredProducts = products.slice(0, 8);
+  const featuredProducts = await fetchFeaturedProductsForHome();
 
   return (
     <section className="py-20">
@@ -20,7 +17,7 @@ const FeaturedProducts = async () => {
             </h2>
           </div>
           <span className="hidden text-7xl font-bold uppercase tracking-tighter text-secondary sm:block font-display">
-            {String(10).padStart(2, "0")}
+            {String(featuredProducts.length).padStart(2, "0")}
           </span>
         </div>
 

@@ -1,11 +1,4 @@
-import {
-  ArrowLeft,
-  Check,
-  Loader2,
-  Minus,
-  Plus,
-  ShoppingBag,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -13,12 +6,6 @@ import { Suspense } from "react";
 import { fetchProduct } from "@/lib/storeApi/products";
 import { AddToCart } from "./_components/AddToCart";
 import { AddToCartSkeleton } from "./_components/AddToCartSkeleton";
-
-type cartStateType = "idle" | "loading" | "added";
-
-const cartState: cartStateType = "idle" as cartStateType;
-
-const quantity = 1;
 
 const ProductDetail = async ({
   params,
@@ -45,7 +32,7 @@ const ProductDetail = async ({
 
       <div className="grid gap-12 md:grid-cols-2">
         {/* Image */}
-        <div className="relative aspect-[3/4] overflow-hidden bg-secondary">
+        <div className="relative aspect-3/4 overflow-hidden bg-secondary">
           <Image
             width={652}
             height={869}

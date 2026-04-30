@@ -3,7 +3,6 @@ import { serverEnv } from "@/lib/env/serverEnv";
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
 
-console.log("IS_DEVELOPMENT", process.env.NODE_ENV);
 const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-inline' ${IS_DEVELOPMENT ? "'unsafe-eval'" : ""}
@@ -29,9 +28,12 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   cacheComponents: true,
   images: {
-    domains: [
-      "images.unsplash.com",
-      "i8qy5y6gxkdgdcv9.public.blob.vercel-storage.com",
+    remotePatterns: [
+      { protocol: "https", hostname: "images.unsplash.com" },
+      {
+        protocol: "https",
+        hostname: "i8qy5y6gxkdgdcv9.public.blob.vercel-storage.com",
+      },
     ],
   },
   async headers() {
