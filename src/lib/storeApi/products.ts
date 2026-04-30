@@ -46,7 +46,7 @@ export async function fetchFeaturedProductsForHome(): Promise<Product[]> {
 
 export async function fetchProductCategories(): Promise<string[]> {
   "use cache";
-  cacheLife("hours");
+  cacheLife("store-catalog");
   cacheTag("store-products", "product-categories");
   const products = await fetchProducts({});
   return [...new Set(products.map((p) => p.category))].sort();
@@ -58,7 +58,7 @@ export async function fetchProductsForSearchRoute(
   category: string | undefined,
 ): Promise<{ hasSearchQuery: boolean; products: Product[] }> {
   "use cache";
-  cacheLife("hours");
+  cacheLife("store-catalog");
   cacheTag("store-products", "product-search");
 
   const apiCategory =

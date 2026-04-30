@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 const HeroSection = () => {
   return (
-    <section className="relative flex min-h-[calc(100vh-113px)] items-center overflow-hidden border-b border-border px-2">
+    <section className="relative flex min-h-[calc(100vh-113px)] items-center overflow-hidden border-b border-border px-2 py-4">
       {/* Grid background */}
       <div
         className="absolute inset-0 opacity-[0.03]"

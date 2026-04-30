@@ -27,6 +27,13 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   cacheComponents: true,
+  cacheLife: {
+    "store-catalog": {
+      stale: 3600, // 1 hour client router cache
+      revalidate: 3600, // 1 hour server background revalidation
+      expire: 86_400, // 1 day hard expiry
+    },
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
