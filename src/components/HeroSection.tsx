@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -15,7 +16,7 @@ const HeroSection = () => {
         }}
       />
 
-      <div className="container mx-auto relative z-10">
+      <div className="container mx-auto relative z-10 flex flex-col lg:flex-row">
         <div className="max-w-4xl">
           <p className="mb-4 font-display text-sm font-semibold uppercase tracking-[0.3em] text-accent">
             New Collection 2026
@@ -42,6 +43,16 @@ const HeroSection = () => {
               <Link href="/search">Explore</Link>
             </Button>
           </div>
+        </div>
+        <div className="flex-1">
+          <Image
+            src="/hero.png"
+            priority
+            alt="Hero Image"
+            width={750}
+            height={500}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
         </div>
       </div>
 

@@ -11,7 +11,7 @@ import { AddToCart } from "./_components/AddToCart";
 import { AddToCartSkeleton } from "./_components/AddToCartSkeleton";
 
 export async function generateStaticParams() {
-  const products = await fetchProducts({});
+  const products = await fetchProducts({ limit: 50 });
   return products.map((p) => ({ id: p.id }));
 }
 
