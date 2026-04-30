@@ -1,5 +1,5 @@
-// actions/cart.ts
 "use server";
+
 import { revalidatePath } from "next/cache";
 import {
   addItemToCart,
@@ -8,22 +8,25 @@ import {
 } from "../storeApi/fetchCart";
 import { getOrCreateCartToken } from "./cartToken";
 
-export async function addToCart(productId: string, quantity: number) {
-  console.log("addToCart", productId, quantity);
-  const cartToken = await getOrCreateCartToken();
-  console.log("addToCart cartToken", cartToken);
-  await addItemToCart(cartToken, productId, quantity);
+function revalidateCartSurfaces() {
   revalidatePath("/cart");
+  revalidatePath("/", "layout");
+}
+
+export async function addToCart(productId: string, quantity: number) {
+  const cartToken = await getOrCreateCartToken();
+  await addItemToCart(cartToken, productId, quantity);
+  revalidateCartSurfaces();
 }
 
 export async function updateCartItem(itemId: string, quantity: number) {
   const cartId = await getOrCreateCartToken();
   await updateCartItemApi(cartId, itemId, quantity);
-  revalidatePath("/cart");
+  revalidateCartSurfaces();
 }
 
 export async function removeCartItem(itemId: string) {
   const cartId = await getOrCreateCartToken();
   await deleteCartItem(cartId, itemId);
-  revalidatePath("/cart");
+  revalidateCartSurfaces();
 }
