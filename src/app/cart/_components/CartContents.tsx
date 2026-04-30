@@ -168,11 +168,12 @@ const CartContents = ({ variant = "drawer", cart }: CartContentsProps) => {
             Checkout
           </Button>
           {!isPage && (
-            <Link href="/cart">
+            // Hard navigation bypasses the intercepted route so /cart opens as a full page
+            <a href="/cart">
               <Button variant="outline" size="lg" className="w-full">
                 View Cart
               </Button>
-            </Link>
+            </a>
           )}
         </div>
       </div>
