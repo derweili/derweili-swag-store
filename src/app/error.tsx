@@ -1,0 +1,55 @@
+"use client";
+
+import { RotateCcw } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+type ErrorPageProps = {
+  error: Error & { digest?: string };
+  reset: () => void;
+};
+
+const ErrorPage = ({ reset }: ErrorPageProps) => {
+  return (
+    <section className="relative flex min-h-[calc(100vh-113px)] items-center overflow-hidden border-b border-border px-2">
+      <div
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+      <div className="container mx-auto relative z-10">
+        <p className="mb-4 font-display text-sm font-semibold uppercase tracking-[0.3em] text-accent">
+          Error 500
+        </p>
+
+        <h1 className="font-display text-6xl font-bold uppercase leading-[0.9] tracking-tighter sm:text-8xl lg:text-9xl">
+          SOMETHING
+          <br />
+          WENT <span className="text-glow text-accent">WRONG</span>
+        </h1>
+
+        <p className="mt-8 max-w-md text-lg text-muted-foreground leading-relaxed">
+          An unexpected error occurred. You can try again or return to the home
+          page.
+        </p>
+
+        <div className="mt-10 flex gap-4 flex-wrap">
+          <Button variant="neon" size="xl" onClick={reset}>
+            <RotateCcw className="mr-2 h-5 w-5" /> Try Again
+          </Button>
+          <Button variant="outline" size="xl" asChild>
+            <Link href="/">Go Home</Link>
+          </Button>
+        </div>
+      </div>
+
+      <div className="absolute right-0 top-1/4 h-1/2 w-px bg-gradient-to-b from-transparent via-accent/50 to-transparent" />
+    </section>
+  );
+};
+
+export default ErrorPage;
