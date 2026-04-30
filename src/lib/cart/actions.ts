@@ -6,6 +6,7 @@ import {
   deleteCartItem,
   updateCartItem as updateCartItemApi,
 } from "../storeApi/fetchCart";
+import type { Cart } from "../storeApi/schema/cart";
 import { getOrCreateCartToken } from "./cartToken";
 
 function revalidateCartSurfaces() {
@@ -19,14 +20,19 @@ export async function addToCart(productId: string, quantity: number) {
   revalidateCartSurfaces();
 }
 
-export async function updateCartItem(itemId: string, quantity: number) {
+export async function updateCartItem(
+  itemId: string,
+  quantity: number,
+): Promise<Cart> {
   const cartId = await getOrCreateCartToken();
-  await updateCartItemApi(cartId, itemId, quantity);
+  const cart = await updateCartItemApi(cartId, itemId, quantity);
   revalidateCartSurfaces();
+  return cart;
 }
 
-export async function removeCartItem(itemId: string) {
+export async function removeCartItem(itemId: string): Promise<Cart> {
   const cartId = await getOrCreateCartToken();
-  await deleteCartItem(cartId, itemId);
+  const cart = await deleteCartItem(cartId, itemId);
   revalidateCartSurfaces();
+  return cart;
 }

@@ -4,7 +4,7 @@ import { Loader2, Minus, Plus, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { removeCartItem, updateCartItem } from "@/lib/cart/actions";
 import type { Cart } from "@/lib/storeApi/schema/cart";
@@ -15,11 +15,21 @@ interface CartContentsProps {
   cart: Cart;
 }
 
-const CartContents = ({ variant = "drawer", cart }: CartContentsProps) => {
+const CartContents = ({
+  variant = "drawer",
+  cart: cartProp,
+}: CartContentsProps) => {
   const router = useRouter();
+  const [cart, setCart] = useState(cartProp);
   const [isPending, startTransition] = useTransition();
   const [pendingLineId, setPendingLineId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  // Sync when the server re-renders this component with fresh props (e.g. on the
+  // full /cart page where router.refresh() works via the children slot).
+  useEffect(() => {
+    setCart(cartProp);
+  }, [cartProp]);
 
   const { items, subtotal } = cart;
 
@@ -29,12 +39,18 @@ const CartContents = ({ variant = "drawer", cart }: CartContentsProps) => {
 
   const lineBusy = (lineId: string) => isPending && pendingLineId === lineId;
 
-  function runLineAction(lineId: string, fn: () => Promise<void>) {
+  function runLineAction(lineId: string, fn: () => Promise<Cart>) {
     setActionError(null);
     setPendingLineId(lineId);
     startTransition(async () => {
       try {
-        await fn();
+        const updatedCart = await fn();
+        // Apply updated cart directly from the action response so the UI
+        // refreshes immediately in both the drawer (parallel @modal slot, where
+        // router.refresh() doesn't re-render the slot's server components) and
+        // the full /cart page.
+        setCart(updatedCart);
+        // Still refresh so other surfaces (MiniCart navbar icon) stay in sync.
         router.refresh();
       } catch {
         setActionError("Something went wrong. Please try again.");
