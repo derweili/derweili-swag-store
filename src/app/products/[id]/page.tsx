@@ -90,6 +90,8 @@ const ProductDetail = async ({
             height={869}
             src={product.images[0]}
             alt={product.name}
+            priority
+            sizes="(max-width: 768px) 100vw, (max-width: 1530px) 50vw, 744px"
             className="h-full w-full object-cover"
           />
         </div>

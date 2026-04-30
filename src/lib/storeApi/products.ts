@@ -58,7 +58,7 @@ export async function fetchProductsForSearchRoute(
   category: string | undefined,
 ): Promise<{ hasSearchQuery: boolean; products: Product[] }> {
   "use cache";
-  cacheLife("minutes");
+  cacheLife("hours");
   cacheTag("store-products", "product-search");
 
   const apiCategory =
