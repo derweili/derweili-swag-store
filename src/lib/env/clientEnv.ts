@@ -5,11 +5,9 @@ import * as z from "zod/mini";
  * These variables are available in the browser (prefixed with NEXT_PUBLIC_)
  */
 export const clientEnvSchema = z.object({
-	NODE_ENV: z.enum(["development", "production"]),
+  NODE_ENV: z.enum(["development", "production"]),
 });
 
-export const clientEnv = clientEnvSchema.parse(
-	{
-		ENV: process.env.NODE_ENV,
-	}
-);
+export const clientEnv = clientEnvSchema.parse({
+  NODE_ENV: process.env.NODE_ENV,
+});

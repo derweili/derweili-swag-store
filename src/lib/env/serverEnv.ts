@@ -5,11 +5,13 @@ import * as z from "zod/mini";
  * These variables are available on the server (not prefixed with NEXT_PUBLIC_)
  */
 const serverEnvSchema = z.object({
-	SWAG_STORE_API_URL: z.url(),
-	IS_DEVELOPMENT: z._default(z.boolean(), false),
+  SWAG_STORE_API_URL: z.url(),
+  SWAG_STORE_API_KEY: z.string(),
+  IS_DEVELOPMENT: z._default(z.boolean(), false),
 });
 
 export const serverEnv = serverEnvSchema.parse({
-	IS_DEVELOPMENT: process.env.VERCEL_ENV === "development",
-	SWAG_STORE_API_URL: process.env.SWAG_STORE_API_URL,
+  IS_DEVELOPMENT: process.env.VERCEL_ENV === "development",
+  SWAG_STORE_API_URL: process.env.SWAG_STORE_API_URL,
+  SWAG_STORE_API_KEY: process.env.SWAG_STORE_API_KEY,
 });

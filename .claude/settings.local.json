@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs cat *)",
+      "mcp__next-devtools__nextjs_docs",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "Bash(npx eslint *)",
+      "Bash(npx biome *)",
+      "Bash(./node_modules/.bin/biome check *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s \"https://vercel-swag-store-api.vercel.app/api/store/config\" -H \"x-vercel-protection-bypass: OykROcuULI6YJwAwk3VnWv4gMMbpAq6q\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(xargs ls *)",
+      "Bash(grep -E \"\\(^[^/]*$|/src/|/app/|package\\\\.json|next\\\\.config\\)\")"
+    ]
+  }
+}

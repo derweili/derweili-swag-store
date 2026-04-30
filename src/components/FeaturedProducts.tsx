@@ -1,8 +1,11 @@
 import ProductCard from "@/components/ProductCard";
+import { fetchFeaturedProductsForHome } from "@/lib/storeApi/products";
 
-const FeaturedProducts = () => {
+const FeaturedProducts = async () => {
+  const featuredProducts = await fetchFeaturedProductsForHome();
+
   return (
-    <section className="py-20">
+    <section className="py-20 px-2">
       <div className="container mx-auto">
         <div className="mb-12 flex items-end justify-between">
           <div>
@@ -14,13 +17,13 @@ const FeaturedProducts = () => {
             </h2>
           </div>
           <span className="hidden text-7xl font-bold uppercase tracking-tighter text-secondary sm:block font-display">
-            {String(10).padStart(2, "0")}
+            {String(featuredProducts.length).padStart(2, "0")}
           </span>
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <ProductCard key={`product-${index}`} />
+          {featuredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </div>

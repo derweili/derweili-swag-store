@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
 import { serverEnv } from "@/lib/env/serverEnv";
 
+const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
+
 const cspHeader = `
   default-src 'self';
-  script-src 'self'
+  script-src 'self' 'unsafe-inline' ${IS_DEVELOPMENT ? "'unsafe-eval'" : ""}
       https://*.vercel-scripts.com
       https://vercel.live
       https://*.vercel.live;
@@ -26,7 +28,13 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   cacheComponents: true,
   images: {
-    domains: ["images.unsplash.com"],
+    remotePatterns: [
+      { protocol: "https", hostname: "images.unsplash.com" },
+      {
+        protocol: "https",
+        hostname: "i8qy5y6gxkdgdcv9.public.blob.vercel-storage.com",
+      },
+    ],
   },
   async headers() {
     return [
