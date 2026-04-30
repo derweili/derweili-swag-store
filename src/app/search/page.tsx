@@ -27,35 +27,47 @@ function resolveCategory(
   return trimmed && categories.includes(trimmed) ? trimmed : "All";
 }
 
+async function SearchShell({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; category?: string }>;
+}) {
+  const [resolved, categories] = await Promise.all([
+    searchParams,
+    fetchProductCategories(),
+  ]);
+
+  const query = (resolved.q ?? "").trim();
+  const category = resolveCategory(resolved.category, categories);
+
+  return (
+    <>
+      <SearchControls
+        categories={categories}
+        initialQuery={resolved.q ?? ""}
+        initialCategory={category}
+      />
+      <Suspense fallback={<SearchResultsSkeleton />}>
+        <SearchResults query={query} category={category} />
+      </Suspense>
+    </>
+  );
+}
+
 const SearchPage = ({ searchParams }: SearchPageProps) => (
   <div className="container mx-auto pt-24 pb-20">
     <h1 className="font-display text-4xl font-bold uppercase tracking-tight sm:text-5xl mb-10">
       Search
     </h1>
-
-    <Suspense fallback={<SearchControlsSkeleton />}>
-      {searchParams.then(async (resolved) => {
-        const categories = await fetchProductCategories();
-        return (
-          <SearchControls
-            categories={categories}
-            initialQuery={resolved.q ?? ""}
-            initialCategory={resolveCategory(resolved.category, categories)}
-          />
-        );
-      })}
-    </Suspense>
-
-    <Suspense fallback={<SearchResultsSkeleton />}>
-      {searchParams.then(async (resolved) => {
-        const categories = await fetchProductCategories();
-        return (
-          <SearchResults
-            query={(resolved.q ?? "").trim()}
-            category={resolveCategory(resolved.category, categories)}
-          />
-        );
-      })}
+    <Suspense
+      fallback={
+        <>
+          <SearchControlsSkeleton />
+          <SearchResultsSkeleton />
+        </>
+      }
+    >
+      <SearchShell searchParams={searchParams} />
     </Suspense>
   </div>
 );
