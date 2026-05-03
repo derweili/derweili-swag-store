@@ -72,9 +72,16 @@ export async function fetchApi(
     "x-vercel-protection-bypass": serverEnv.SWAG_STORE_API_KEY,
   };
 
-  const res = await fetch(url, { ...init, headers });
+  let res: Response;
+  try {
+    res = await fetch(url, { ...init, headers });
+  } catch (err) {
+    console.error(`[fetchApi] Network error fetching ${url}:`, err);
+    throw err;
+  }
 
   if (!res.ok) {
+    console.error(`[fetchApi] HTTP ${res.status} ${res.statusText} — ${url}`);
     throw new Error(`fetchApi failed: ${res.status} ${res.statusText}`);
   }
 
