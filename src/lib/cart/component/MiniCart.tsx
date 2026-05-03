@@ -8,9 +8,13 @@ export const MiniCart = async () => {
     return <CartIcon numberOfItems={0} />;
   }
 
-  const cart = await fetchCart(cartToken);
-
-  const numberOfItems = cart.items.length;
+  let numberOfItems = 0;
+  try {
+    const cart = await fetchCart(cartToken);
+    numberOfItems = cart.items.length;
+  } catch {
+    // Stale or invalid token — treat as empty cart
+  }
 
   return <CartIcon numberOfItems={numberOfItems} />;
 };

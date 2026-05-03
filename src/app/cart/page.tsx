@@ -2,7 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { getCartToken } from "@/lib/cart/cartToken";
+import { clearCartToken, getCartToken } from "@/lib/cart/cartToken";
 import { fetchCart } from "@/lib/storeApi/fetchCart";
 import CartContents from "./_components/CartContents";
 import { CartPageSkeleton } from "./_components/CartPageSkeleton";
@@ -23,8 +23,13 @@ async function CartBody() {
     return <EmptyCart />;
   }
 
-  const cart = await fetchCart(token);
-  return <CartContents cart={cart} variant="page" />;
+  try {
+    const cart = await fetchCart(token);
+    return <CartContents cart={cart} variant="page" />;
+  } catch {
+    await clearCartToken();
+    return <EmptyCart />;
+  }
 }
 
 export default function CartPage() {

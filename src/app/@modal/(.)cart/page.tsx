@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import CartContents from "@/app/cart/_components/CartContents";
 import { CartPageSkeleton } from "@/app/cart/_components/CartPageSkeleton";
 import { EmptyCart } from "@/app/cart/_components/EmptyCart";
-import { getCartToken } from "@/lib/cart/cartToken";
+import { clearCartToken, getCartToken } from "@/lib/cart/cartToken";
 import { fetchCart } from "@/lib/storeApi/fetchCart";
 import { CartDrawer } from "./_components/CartDrawer";
 
@@ -13,8 +13,13 @@ async function CartBody() {
     return <EmptyCart />;
   }
 
-  const cart = await fetchCart(token);
-  return <CartContents variant="drawer" cart={cart} />;
+  try {
+    const cart = await fetchCart(token);
+    return <CartContents variant="drawer" cart={cart} />;
+  } catch {
+    await clearCartToken();
+    return <EmptyCart />;
+  }
 }
 
 export default function InterceptedCartPage() {
