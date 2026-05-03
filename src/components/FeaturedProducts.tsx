@@ -1,8 +1,15 @@
 import ProductCard from "@/components/ProductCard";
 import { fetchFeaturedProductsForHome } from "@/lib/storeApi/products";
+import type { Product } from "@/lib/storeApi/schema/product";
 
 const FeaturedProducts = async () => {
-  const featuredProducts = await fetchFeaturedProductsForHome();
+  let featuredProducts: Product[];
+  try {
+    featuredProducts = await fetchFeaturedProductsForHome();
+  } catch (err) {
+    console.error("[FeaturedProducts] Failed to load featured products:", err);
+    return null;
+  }
 
   return (
     <section className="py-20 px-2">

@@ -5,7 +5,8 @@ const HomePromotionBanner = async () => {
   try {
     const promotion = await fetchPromotionForHome();
     return <PromotionBannerClient {...promotion} />;
-  } catch {
+  } catch (err) {
+    console.error("[HomePromotionBanner] Failed to load promotion:", err);
     return null;
   }
 };
