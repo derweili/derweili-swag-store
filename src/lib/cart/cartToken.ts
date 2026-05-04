@@ -16,6 +16,11 @@ export async function setCartToken(cartId: string) {
   });
 }
 
+export async function clearCartToken() {
+  const cookieStore = await cookies();
+  cookieStore.delete("cart_id");
+}
+
 export async function getOrCreateCartToken(): Promise<string> {
   const cartId = await getCartToken();
 

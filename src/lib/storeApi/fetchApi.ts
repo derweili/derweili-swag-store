@@ -4,6 +4,16 @@ const baseUrl = serverEnv.SWAG_STORE_API_URL.replace(/\/$/, "");
 
 type SchemaWithParse = { parse: (data: unknown) => unknown };
 
+export class FetchApiHttpError extends Error {
+  constructor(
+    public readonly status: number,
+    statusText: string,
+  ) {
+    super(`fetchApi failed: ${status} ${statusText}`);
+    this.name = "FetchApiHttpError";
+  }
+}
+
 /** API error payload when success is false */
 export type ApiErrorResponse = {
   code: string;
@@ -82,7 +92,7 @@ export async function fetchApi(
 
   if (!res.ok) {
     console.error(`[fetchApi] HTTP ${res.status} ${res.statusText} — ${url}`);
-    throw new Error(`fetchApi failed: ${res.status} ${res.statusText}`);
+    throw new FetchApiHttpError(res.status, res.statusText);
   }
 
   const json = (await res.json()) as unknown;
