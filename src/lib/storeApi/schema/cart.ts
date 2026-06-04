@@ -33,6 +33,13 @@ const CartImageSchema = z.object({
   alt: z.string(),
 });
 
+const CartItemQuantityLimitsSchema = z.object({
+  minimum: z.int(),
+  maximum: z.int(),
+  multiple_of: z.int(),
+  editable: z.coerce.boolean(),
+});
+
 export const CartItemSchema = z.object({
   key: z.string(),
   id: z.int(),
@@ -44,6 +51,7 @@ export const CartItemSchema = z.object({
   totals: CartItemTotalsSchema,
   permalink: z.string(),
   low_stock_remaining: z.nullable(z.int()),
+  quantity_limits: CartItemQuantityLimitsSchema,
 });
 
 const CartTotalsSchema = z.object({

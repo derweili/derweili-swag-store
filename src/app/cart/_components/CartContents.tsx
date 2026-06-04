@@ -143,27 +143,35 @@ const CartContents = ({
 
                   <div className="flex items-end flex-wrap justify-between gap-2 mt-2">
                     <div className="flex items-center border border-border">
-                      <button
-                        type="button"
-                        onClick={() => updateQuantity(item.key, item.quantity - 1)}
-                        disabled={busy}
-                        className="flex h-8 w-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
-                        aria-label="Decrease quantity"
-                      >
-                        <Minus className="h-3 w-3" />
-                      </button>
-                      <span className="flex h-8 w-10 items-center justify-center border-x border-border font-display text-sm font-semibold">
-                        {item.quantity}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => updateQuantity(item.key, item.quantity + 1)}
-                        disabled={busy}
-                        className="flex h-8 w-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
-                        aria-label="Increase quantity"
-                      >
-                        <Plus className="h-3 w-3" />
-                      </button>
+                      {item.quantity_limits.editable ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.key, item.quantity - 1)}
+                            disabled={busy}
+                            className="flex h-8 w-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="flex h-8 w-10 items-center justify-center border-x border-border font-display text-sm font-semibold">
+                            {item.quantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.key, item.quantity + 1)}
+                            disabled={busy || item.quantity >= item.quantity_limits.maximum}
+                            className="flex h-8 w-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        </>
+                      ) : (
+                        <span className="flex h-8 items-center px-3 font-display text-sm font-semibold">
+                          Qty: {item.quantity}
+                        </span>
+                      )}
                     </div>
                     <p className="font-display font-bold text-accent">
                       {item.totals.currency_prefix}
