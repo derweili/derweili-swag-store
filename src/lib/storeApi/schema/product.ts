@@ -1,7 +1,10 @@
 import { z } from "zod/mini";
 
 // WooCommerce sometimes returns booleans as 0/1 integers
-const wcBoolean = z.union([z.boolean(), z.number().transform((n) => n !== 0)]);
+const wcBoolean = z.preprocess(
+  (val) => (typeof val === "number" ? val !== 0 : val),
+  z.boolean(),
+);
 
 const PricesSchema = z.object({
   price: z.string(),
