@@ -25,7 +25,7 @@ const cspHeader = `
 
 const storeHostname = (() => {
   try {
-    return new URL(serverEnv.SWAG_STORE_API_URL).hostname;
+    return new URL(serverEnv.SWAG_STORE_WOOCOMMERCE_API_URL).hostname;
   } catch {
     return "";
   }

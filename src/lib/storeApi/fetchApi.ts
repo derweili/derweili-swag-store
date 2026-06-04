@@ -1,6 +1,6 @@
 import { serverEnv } from "@/lib/env/serverEnv";
 
-const baseUrl = serverEnv.SWAG_STORE_API_URL.replace(/\/$/, "");
+const baseUrl = serverEnv.SWAG_STORE_WOOCOMMERCE_API_URL.replace(/\/$/, "");
 
 type SchemaWithParse<T = unknown> = { parse: (data: unknown) => T };
 
@@ -29,7 +29,7 @@ function headersToRecord(headers: Headers): Record<string, string> {
 
 /**
  * Fetch wrapper for the WooCommerce Store API.
- * Pass the path (e.g. "/products"); it is prefixed with SWAG_STORE_API_URL.
+ * Pass the path (e.g. "/products"); it is prefixed with SWAG_STORE_WOOCOMMERCE_API_URL.
  *
  * Returns { data, metadata } where data is the parsed JSON body and
  * metadata is the response headers (all keys lowercased).
