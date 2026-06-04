@@ -60,7 +60,8 @@ export async function fetchApi(
   }
 
   if (!res.ok) {
-    console.error(`[fetchApi] HTTP ${res.status} ${res.statusText} — ${url}`);
+    const body = await res.text().catch(() => "(unreadable)");
+    console.error(`[fetchApi] HTTP ${res.status} ${res.statusText} — ${url}\n${body}`);
     throw new FetchApiHttpError(res.status, res.statusText);
   }
 
