@@ -1,5 +1,8 @@
 import { z } from "zod/mini";
 
+// WooCommerce sometimes returns booleans as 0/1 integers
+const wcBoolean = z.union([z.boolean(), z.number().transform((n) => n !== 0)]);
+
 const PricesSchema = z.object({
   price: z.string(),
   regular_price: z.string(),
@@ -45,14 +48,14 @@ export const ProductSchema = z.object({
   permalink: z.string(),
   description: z.string(),
   short_description: z.string(),
-  on_sale: z.boolean(),
+  on_sale: wcBoolean,
   prices: PricesSchema,
   images: z.array(ImageSchema),
-  featured: z.boolean(),
+  featured: wcBoolean,
   categories: z.array(TermSchema),
   tags: z.array(TermSchema),
-  is_in_stock: z.boolean(),
-  is_on_backorder: z.boolean(),
+  is_in_stock: wcBoolean,
+  is_on_backorder: wcBoolean,
   low_stock_remaining: z.nullable(z.int()),
   add_to_cart: AddToCartSchema,
   average_rating: z.string(),
