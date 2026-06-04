@@ -2,7 +2,7 @@ import { serverEnv } from "@/lib/env/serverEnv";
 
 const baseUrl = serverEnv.SWAG_STORE_API_URL.replace(/\/$/, "");
 
-type SchemaWithParse = { parse: (data: unknown) => unknown };
+type SchemaWithParse<T = unknown> = { parse: (data: unknown) => T };
 
 export class FetchApiHttpError extends Error {
   constructor(
@@ -14,77 +14,46 @@ export class FetchApiHttpError extends Error {
   }
 }
 
-/** API error payload when success is false */
-export type ApiErrorResponse = {
-  code: string;
-  message: string;
-  details: null;
-};
-
-/** Success envelope: data and optional meta */
-export type ApiSuccessEnvelope<T = unknown> = {
-  success: true;
+export type FetchApiResult<T = unknown> = {
   data: T;
-  meta?: Record<string, unknown>;
+  metadata: Record<string, string>;
 };
 
-function isApiErrorResponse(
-  json: unknown,
-): json is { success: false; error: ApiErrorResponse } {
-  return (
-    typeof json === "object" &&
-    json !== null &&
-    "success" in json &&
-    (json as { success: unknown }).success === false &&
-    "error" in json &&
-    typeof (json as { error: unknown }).error === "object"
-  );
-}
-
-function isApiSuccessResponse(json: unknown): json is ApiSuccessEnvelope {
-  return (
-    typeof json === "object" &&
-    json !== null &&
-    "success" in json &&
-    (json as { success: unknown }).success === true &&
-    "data" in json
-  );
+function headersToRecord(headers: Headers): Record<string, string> {
+  const result: Record<string, string> = {};
+  headers.forEach((value, key) => {
+    result[key.toLowerCase()] = value;
+  });
+  return result;
 }
 
 /**
- * Fetch wrapper for the swag store API.
+ * Fetch wrapper for the WooCommerce Store API.
  * Pass the path (e.g. "/products"); it is prefixed with SWAG_STORE_API_URL.
- * Automatically sets the x-vercel-protection-bypass header from SWAG_STORE_API_KEY.
  *
- * Responses follow the envelope: { success: true, data, meta? } or { success: false, error: { code, message, details } }.
- * On success: false an ApiError is thrown; on success: true the data (and optional meta when no schema) is returned.
- *
+ * Returns { data, metadata } where data is the parsed JSON body and
+ * metadata is the response headers (all keys lowercased).
  * Optionally pass a Zod schema as the third argument to parse and type `data`.
  */
 export async function fetchApi(
   input: string,
   init?: RequestInit,
-): Promise<ApiSuccessEnvelope>;
-export async function fetchApi<T extends SchemaWithParse>(
+): Promise<FetchApiResult<unknown>>;
+export async function fetchApi<TData>(
   input: string,
   init: RequestInit | undefined,
-  schema: T,
-): Promise<T["parse"] extends (data: unknown) => infer R ? R : never>;
+  schema: SchemaWithParse<TData>,
+): Promise<FetchApiResult<TData>>;
 export async function fetchApi(
   input: string,
   init?: RequestInit,
   schema?: SchemaWithParse,
-): Promise<ApiSuccessEnvelope | unknown> {
+): Promise<FetchApiResult<unknown>> {
   const url = `${baseUrl}${input.startsWith("/") ? input : `/${input}`}`;
-
-  const headers = {
-    ...(init?.headers || {}),
-    "x-vercel-protection-bypass": serverEnv.SWAG_STORE_API_KEY,
-  };
 
   let res: Response;
   try {
-    res = await fetch(url, { ...init, headers });
+    res = await fetch(url, init);
   } catch (err) {
     console.error(`[fetchApi] Network error fetching ${url}:`, err);
     throw err;
@@ -96,21 +65,11 @@ export async function fetchApi(
   }
 
   const json = (await res.json()) as unknown;
-
-  if (isApiErrorResponse(json)) {
-    const { code, message, details } = json.error;
-
-    console.error("fetchApi failed:", code, message, details);
-    throw new Error(message);
-  }
-
-  if (!isApiSuccessResponse(json)) {
-    throw new Error("fetchApi: invalid response envelope");
-  }
+  const metadata = headersToRecord(res.headers);
 
   if (schema != null) {
-    return schema.parse(json.data);
+    return { data: schema.parse(json), metadata };
   }
 
-  return json;
+  return { data: json, metadata };
 }

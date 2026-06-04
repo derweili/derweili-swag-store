@@ -23,13 +23,13 @@ export const fetchProducts = async ({
   if (query) queryParams.set("search", query);
   if (category) queryParams.set("category", category);
   if (page != null) queryParams.set("page", page.toString());
-  if (limit != null) queryParams.set("limit", limit.toString());
+  if (limit != null) queryParams.set("per_page", limit.toString());
   if (featured != null) queryParams.set("featured", featured.toString());
 
   const qs = queryParams.toString();
   const path = qs === "" ? "/products" : `/products?${qs}`;
 
-  const products = await fetchApi(path, undefined, z.array(ProductSchema));
+  const { data: products } = await fetchApi(path, undefined, z.array(ProductSchema));
   return products;
 };
 
@@ -49,10 +49,9 @@ export async function fetchProductCategories(): Promise<string[]> {
   cacheLife("store-catalog");
   cacheTag("store-products", "product-categories");
   const products = await fetchProducts({});
-  return [...new Set(products.map((p) => p.category))].sort();
+  return [...new Set(products.flatMap((p) => p.categories.map((c) => c.slug)))].sort();
 }
 
-/** Cached product list keyed by trimmed search query + category selection. */
 export async function fetchProductsForSearchRoute(
   query: string | undefined,
   category: string | undefined,
@@ -84,11 +83,15 @@ export async function fetchProductsForSearchRoute(
   return { hasSearchQuery, products };
 }
 
-export async function fetchProduct(id: string) {
+/** Fetch a single product by slug. Returns null if not found. Cached per slug. */
+export async function fetchProduct(slug: string): Promise<Product | null> {
   "use cache";
   cacheLife("hours");
-  cacheTag("store-products", `product-${id}`);
-  const product = await fetchApi(`/products/${id}`, undefined, ProductSchema);
-
-  return product;
+  cacheTag("store-products", `product-${slug}`);
+  const { data: products } = await fetchApi(
+    `/products?slug=${encodeURIComponent(slug)}`,
+    undefined,
+    z.array(ProductSchema),
+  );
+  return products[0] ?? null;
 }

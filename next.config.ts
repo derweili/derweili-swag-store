@@ -23,6 +23,14 @@ const cspHeader = `
   ${serverEnv.IS_DEVELOPMENT ? "" : "upgrade-insecure-requests"};
 `;
 
+const storeHostname = (() => {
+  try {
+    return new URL(serverEnv.SWAG_STORE_API_URL).hostname;
+  } catch {
+    return "";
+  }
+})();
+
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
@@ -36,6 +44,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
+      ...(storeHostname ? [{ protocol: "https" as const, hostname: storeHostname }] : []),
       { protocol: "https", hostname: "images.unsplash.com" },
       {
         protocol: "https",

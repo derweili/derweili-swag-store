@@ -24,7 +24,7 @@ async function CartBody() {
   }
 
   try {
-    const cart = await fetchCart(token);
+    const { cart } = await fetchCart(token);
     return <CartContents cart={cart} variant="page" />;
   } catch {
     await clearCartToken();
