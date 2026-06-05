@@ -7,6 +7,7 @@ import {
   addItemToCart,
   deleteCartItem,
   fetchCart,
+  selectCartShippingRate,
   updateCartItem as updateCartItemApi,
 } from "../storeApi/fetchCart";
 import type { Cart } from "../storeApi/schema/cart";
@@ -75,6 +76,15 @@ export async function removeCartItem(itemId: string): Promise<Cart> {
     }
     throw err;
   }
+}
+
+export async function selectShippingRate(
+  packageId: string | number,
+  rateId: string,
+): Promise<Cart> {
+  const cartToken = await getCartToken();
+  if (!cartToken) throw new Error("No active cart found");
+  return selectCartShippingRate(cartToken, packageId, rateId);
 }
 
 export async function placeOrder(

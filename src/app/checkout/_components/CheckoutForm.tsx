@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
-import { placeOrder } from "@/lib/cart/actions";
+import { placeOrder, selectShippingRate } from "@/lib/cart/actions";
 import { stripePromise } from "@/lib/stripe/client";
 import type { BillingAddress } from "@/lib/storeApi/schema/checkout";
 import type { Cart } from "@/lib/storeApi/schema/cart";
@@ -40,14 +40,30 @@ const stripeElementStyle = {
   invalid: { color: "#ef4343" },
 };
 
-function CheckoutFormInner({ cart }: CheckoutFormProps) {
+function CheckoutFormInner({ cart: initialCart }: CheckoutFormProps) {
   const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [cart, setCart] = useState(initialCart);
 
   const { totals } = cart;
+
+  const allRates = cart.shipping_rates.flatMap((pkg) =>
+    pkg.shipping_rates.map((rate) => ({ ...rate, packageId: pkg.package_id })),
+  );
+
+  function handleShippingChange(packageId: string | number, rateId: string) {
+    startTransition(async () => {
+      try {
+        const updated = await selectShippingRate(packageId, rateId);
+        setCart(updated);
+      } catch {
+        setError("Failed to update shipping method. Please try again.");
+      }
+    });
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -178,28 +194,53 @@ function CheckoutFormInner({ cart }: CheckoutFormProps) {
           </div>
         </section>
 
-        {/* Shipping method — static UI */}
+        {/* Shipping method */}
         <section>
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight mb-5">
             Shipping Method
           </h2>
-          <div className="border border-border divide-y divide-border">
-            <label className="flex items-center justify-between p-4 cursor-pointer hover:bg-secondary/40 transition">
-              <div className="flex items-center gap-3">
-                <input type="radio" name="ship" defaultChecked className="accent-accent" />
-                <span className="font-display uppercase text-sm tracking-wider">
-                  Standard (3–5 days)
-                </span>
-              </div>
-              <span className="font-display font-bold text-accent">
-                {totals.total_shipping === null
-                  ? "Calculated at next step"
-                  : totals.total_shipping === "0"
-                  ? "FREE"
-                  : formatAmount(totals.total_shipping, totals.currency_minor_unit, totals.currency_prefix)}
-              </span>
-            </label>
-          </div>
+          {allRates.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No shipping methods available.</p>
+          ) : (
+            <div className="border border-border divide-y divide-border">
+              {allRates.map((rate) => {
+                const priceLabel =
+                  rate.price === "0"
+                    ? "FREE"
+                    : formatAmount(rate.price, rate.currency_minor_unit, rate.currency_prefix);
+                return (
+                  <label
+                    key={rate.rate_id}
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-secondary/40 transition"
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="shipping_rate"
+                        value={rate.rate_id}
+                        defaultChecked={rate.selected}
+                        disabled={isPending}
+                        onChange={() => handleShippingChange(rate.packageId, rate.rate_id)}
+                        className="accent-accent"
+                      />
+                      <div>
+                        <span className="font-display uppercase text-sm tracking-wider">
+                          {rate.name}
+                        </span>
+                        {rate.delivery_time && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{rate.delivery_time}</p>
+                        )}
+                        {rate.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{rate.description}</p>
+                        )}
+                      </div>
+                    </div>
+                    <span className="font-display font-bold text-accent">{priceLabel}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {/* Payment — Stripe Elements */}
