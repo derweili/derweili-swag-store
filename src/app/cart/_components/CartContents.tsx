@@ -201,9 +201,11 @@ const CartContents = ({
           Shipping & taxes calculated at checkout
         </p>
         <div className="flex flex-col gap-2">
-          <Button variant="neon" size="lg" className="w-full">
-            Checkout
-          </Button>
+          <Link href="/checkout" className="w-full">
+            <Button variant="neon" size="lg" className="w-full">
+              Checkout
+            </Button>
+          </Link>
           {!isPage && (
             <a href="/cart">
               <Button variant="outline" size="lg" className="w-full">

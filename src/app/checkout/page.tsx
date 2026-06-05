@@ -24,7 +24,7 @@ async function CheckoutBody() {
 
 export default function Checkout() {
   return (
-    <div className="container pt-24 pb-20 max-w-7xl">
+    <div className="container mx-auto pt-24 pb-20 max-w-7xl">
       <Link
         href="/cart"
         className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-accent font-display uppercase tracking-wider"

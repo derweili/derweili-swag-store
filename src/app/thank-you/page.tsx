@@ -17,7 +17,7 @@ async function ThankYouBody({
   const { orderId } = await searchParams;
 
   return (
-    <div className="container pt-24 pb-20 max-w-3xl">
+    <div className="container mx-auto pt-24 pb-20 max-w-3xl">
       <div className="flex flex-col items-center text-center mb-12">
         <div className="relative mb-6">
           <div className="h-20 w-20 rounded-full bg-accent flex items-center justify-center neon-border">
