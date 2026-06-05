@@ -11,7 +11,7 @@ export const MiniCart = async () => {
   let numberOfItems = 0;
   try {
     const { cart } = await fetchCart(cartToken);
-    numberOfItems = cart.items.length;
+    numberOfItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
   } catch {
     // Stale or invalid token — treat as empty cart
   }
