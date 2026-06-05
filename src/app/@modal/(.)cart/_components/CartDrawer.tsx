@@ -45,7 +45,7 @@ export function CartDrawer({ children }: { children: React.ReactNode }) {
     <>
       <div
         className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
-          visible ? "opacity-100" : "opacity-0"
+          visible ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={close}
         aria-hidden="true"
