@@ -6,6 +6,8 @@ import { fetchCart } from "@/lib/storeApi/fetchCart";
 import { getCartToken } from "@/lib/cart/cartToken";
 import { CheckoutForm } from "./_components/CheckoutForm";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Checkout",
   robots: { index: false },
