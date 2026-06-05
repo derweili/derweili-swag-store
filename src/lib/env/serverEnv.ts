@@ -1,17 +1,15 @@
 import * as z from "zod/mini";
 
-/**
- * Server-side environment variables schema
- * These variables are available on the server (not prefixed with NEXT_PUBLIC_)
- */
 const serverEnvSchema = z.object({
-  SWAG_STORE_API_URL: z.url(),
-  SWAG_STORE_API_KEY: z.string(),
+  SWAG_STORE_WOOCOMMERCE_API_URL: z.url(),
+  STORE_NAME: z._default(z.string(), "Swag Store"),
+  STORE_DESCRIPTION: z._default(z.string(), "Your favorite swag store"),
   IS_DEVELOPMENT: z._default(z.boolean(), false),
 });
 
 export const serverEnv = serverEnvSchema.parse({
   IS_DEVELOPMENT: process.env.VERCEL_ENV === "development",
-  SWAG_STORE_API_URL: process.env.SWAG_STORE_API_URL,
-  SWAG_STORE_API_KEY: process.env.SWAG_STORE_API_KEY,
+  SWAG_STORE_WOOCOMMERCE_API_URL: process.env.SWAG_STORE_WOOCOMMERCE_API_URL,
+  STORE_NAME: process.env.STORE_NAME,
+  STORE_DESCRIPTION: process.env.STORE_DESCRIPTION,
 });

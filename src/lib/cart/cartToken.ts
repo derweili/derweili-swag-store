@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { createNewCart } from "../storeApi/fetchCart";
+import { fetchCart } from "../storeApi/fetchCart";
 
 export async function getCartToken(): Promise<string | undefined> {
   const cookieStore = await cookies();
@@ -12,7 +12,7 @@ export async function setCartToken(cartId: string) {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 30, // 30 days — persists across refreshes
+    maxAge: 60 * 60 * 24 * 30, // 30 days
   });
 }
 
@@ -23,12 +23,11 @@ export async function clearCartToken() {
 
 export async function getOrCreateCartToken(): Promise<string> {
   const cartId = await getCartToken();
+  if (cartId) return cartId;
 
-  if (cartId) {
-    return cartId;
-  }
-
-  const res = await createNewCart();
-  await setCartToken(res.token);
-  return res.token;
+  // GET /cart without a token: WooCommerce creates a new cart and returns Cart-Token in headers
+  const { cartToken } = await fetchCart(undefined);
+  if (!cartToken) throw new Error("WooCommerce did not return a Cart-Token");
+  await setCartToken(cartToken);
+  return cartToken;
 }

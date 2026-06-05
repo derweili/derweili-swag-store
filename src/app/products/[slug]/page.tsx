@@ -12,18 +12,20 @@ import { AddToCartSkeleton } from "./_components/AddToCartSkeleton";
 
 export async function generateStaticParams() {
   const products = await fetchProducts({ limit: 50 });
-  return products.map((p) => ({ id: p.id }));
+  return products.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
-  const product = await fetchProduct(id);
+  const { slug } = await params;
+  const product = await fetchProduct(slug);
 
   if (!product) return {};
+
+  const firstImage = product.images[0];
 
   return {
     title: product.name,
@@ -32,14 +34,14 @@ export async function generateMetadata({
       type: "website",
       title: product.name,
       description: product.description,
-      images: product.images[0]
-        ? [{ url: product.images[0], alt: product.name }]
+      images: firstImage
+        ? [{ url: firstImage.src, alt: firstImage.alt || product.name }]
         : [],
     },
     twitter: {
       title: product.name,
       description: product.description,
-      images: product.images[0] ? [product.images[0]] : [],
+      images: firstImage ? [firstImage.src] : [],
     },
   };
 }
@@ -47,27 +49,34 @@ export async function generateMetadata({
 const ProductDetail = async ({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) => {
-  const { id } = await params;
+  const { slug } = await params;
 
-  const product = await fetchProduct(id);
+  const product = await fetchProduct(slug);
 
   if (!product) {
     return notFound();
   }
+
+  const price =
+    parseInt(product.prices.price, 10) /
+    Math.pow(10, product.prices.currency_minor_unit);
+
+  const firstImage = product.images[0];
+  const category = product.categories[0]?.name ?? "";
 
   const jsonLd: WithContext<SchemaProduct> = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
     description: product.description,
-    image: product.images,
-    category: product.category,
+    image: product.images.map((img) => img.src),
+    category,
     offers: {
       "@type": "Offer",
-      price: (product.price / 100).toFixed(2),
-      priceCurrency: product.currency,
+      price: price.toFixed(product.prices.currency_minor_unit),
+      priceCurrency: product.prices.currency_code,
       availability: "https://schema.org/InStock",
     },
   };
@@ -85,27 +94,32 @@ const ProductDetail = async ({
       <div className="grid gap-12 md:grid-cols-2">
         {/* Image */}
         <div className="relative aspect-3/4 overflow-hidden bg-secondary">
-          <Image
-            width={652}
-            height={869}
-            src={product.images[0]}
-            alt={product.name}
-            priority
-            sizes="(max-width: 768px) 100vw, (max-width: 1530px) 50vw, 744px"
-            className="h-full w-full object-cover"
-          />
+          {firstImage && (
+            <Image
+              width={652}
+              height={869}
+              src={firstImage.src}
+              alt={firstImage.alt || product.name}
+              priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1530px) 50vw, 744px"
+              className="h-full w-full object-cover"
+            />
+          )}
         </div>
 
         {/* Info */}
         <div className="flex flex-col justify-center px-2 md:px-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-accent mb-3">
-            {product.category}
-          </p>
+          {category && (
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-accent mb-3">
+              {category}
+            </p>
+          )}
           <h1 className="font-display text-4xl font-bold uppercase tracking-tight sm:text-5xl">
             {product.name}
           </h1>
           <p className="mt-4 text-3xl font-bold text-accent font-display">
-            ${(product.price / 100).toFixed(2)}
+            {product.prices.currency_prefix}
+            {price.toFixed(product.prices.currency_minor_unit)}
           </p>
 
           <p className="mt-6 text-muted-foreground leading-relaxed">
@@ -113,7 +127,7 @@ const ProductDetail = async ({
           </p>
 
           <Suspense fallback={<AddToCartSkeleton />}>
-            <AddToCart productId={product.id} />
+            <AddToCart productId={String(product.id)} />
           </Suspense>
         </div>
       </div>

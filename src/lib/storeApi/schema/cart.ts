@@ -1,22 +1,85 @@
 import { z } from "zod/mini";
-import { ProductSchema } from "./product";
 
-export const CartItemWithProductSchema = z.object({
-  productId: z.string(),
+const CartItemPricesSchema = z.object({
+  price: z.string(),
+  regular_price: z.string(),
+  sale_price: z.string(),
+  currency_code: z.string(),
+  currency_symbol: z.string(),
+  currency_minor_unit: z.int(),
+  currency_prefix: z.string(),
+  currency_suffix: z.string(),
+});
+
+const CartItemTotalsSchema = z.object({
+  line_subtotal: z.string(),
+  line_subtotal_tax: z.string(),
+  line_total: z.string(),
+  line_total_tax: z.string(),
+  currency_code: z.string(),
+  currency_symbol: z.string(),
+  currency_minor_unit: z.int(),
+  currency_prefix: z.string(),
+  currency_suffix: z.string(),
+});
+
+const CartImageSchema = z.object({
+  id: z.int(),
+  src: z.string(),
+  thumbnail: z.string(),
+  srcset: z.string(),
+  sizes: z.string(),
+  name: z.string(),
+  alt: z.string(),
+});
+
+const CartItemQuantityLimitsSchema = z.object({
+  minimum: z.int(),
+  maximum: z.int(),
+  multiple_of: z.int(),
+  editable: z.coerce.boolean(),
+});
+
+export const CartItemSchema = z.object({
+  key: z.string(),
+  id: z.int(),
   quantity: z.int(),
-  addedAt: z.iso.datetime(),
-  product: ProductSchema,
-  lineTotal: z.int(),
+  name: z.string(),
+  short_description: z.string(),
+  images: z.array(CartImageSchema),
+  prices: CartItemPricesSchema,
+  totals: CartItemTotalsSchema,
+  permalink: z.string(),
+  low_stock_remaining: z.nullable(z.int()),
+  quantity_limits: CartItemQuantityLimitsSchema,
+});
+
+const CartTotalsSchema = z.object({
+  total_items: z.string(),
+  total_items_tax: z.string(),
+  total_fees: z.string(),
+  total_fees_tax: z.string(),
+  total_discount: z.string(),
+  total_discount_tax: z.string(),
+  total_shipping: z.nullable(z.string()),
+  total_shipping_tax: z.nullable(z.string()),
+  total_price: z.string(),
+  total_tax: z.string(),
+  currency_code: z.string(),
+  currency_symbol: z.string(),
+  currency_minor_unit: z.int(),
+  currency_decimal_separator: z.string(),
+  currency_thousand_separator: z.string(),
+  currency_prefix: z.string(),
+  currency_suffix: z.string(),
 });
 
 export const CartWithProductsSchema = z.object({
-  token: z.uuid(),
-  items: z.array(CartItemWithProductSchema),
-  totalItems: z.int(),
-  subtotal: z.int(),
-  currency: z.string(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
+  items: z.array(CartItemSchema),
+  items_count: z.int(),
+  totals: CartTotalsSchema,
+  errors: z.array(z.unknown()),
 });
 
 export type Cart = z.infer<typeof CartWithProductsSchema>;
+export type CartItem = z.infer<typeof CartItemSchema>;

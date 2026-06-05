@@ -1,9 +1,11 @@
 import { z } from "zod/mini";
 
 export const CategorySchema = z.object({
-  slug: z.string(),
+  id: z.int(),
   name: z.string(),
-  productCount: z.int(),
+  slug: z.string(),
+  count: z.int(),
+  link: z.string(),
 });
 
 export type Category = z.infer<typeof CategorySchema>;
