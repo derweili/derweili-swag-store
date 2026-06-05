@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { submitCheckout } from "../storeApi/checkout";
 import { FetchApiHttpError } from "../storeApi/fetchApi";
 import {
   addItemToCart,
@@ -8,7 +9,12 @@ import {
   updateCartItem as updateCartItemApi,
 } from "../storeApi/fetchCart";
 import type { Cart } from "../storeApi/schema/cart";
-import { clearCartToken, getOrCreateCartToken } from "./cartToken";
+import type {
+  BillingAddress,
+  CheckoutOrder,
+  ShippingAddress,
+} from "../storeApi/schema/checkout";
+import { clearCartToken, getCartToken, getOrCreateCartToken } from "./cartToken";
 
 function revalidateCartSurfaces() {
   revalidatePath("/cart");
@@ -71,4 +77,30 @@ export async function removeCartItem(itemId: string): Promise<Cart> {
     }
     throw err;
   }
+}
+
+export async function placeOrder(
+  billingAddress: BillingAddress,
+): Promise<CheckoutOrder> {
+  const cartToken = await getCartToken();
+  if (!cartToken) throw new Error("No active cart found");
+
+  const shippingAddress: ShippingAddress = {
+    first_name: billingAddress.first_name,
+    last_name: billingAddress.last_name,
+    company: billingAddress.company,
+    address_1: billingAddress.address_1,
+    address_2: billingAddress.address_2,
+    city: billingAddress.city,
+    state: billingAddress.state,
+    postcode: billingAddress.postcode,
+    country: billingAddress.country,
+  };
+
+  const order = await submitCheckout(cartToken, billingAddress, shippingAddress);
+
+  await clearCartToken();
+  revalidatePath("/cart");
+
+  return order;
 }
