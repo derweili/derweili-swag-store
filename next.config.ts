@@ -8,13 +8,14 @@ const cspHeader = `
   script-src 'self' 'unsafe-inline' ${IS_DEVELOPMENT ? "'unsafe-eval'" : ""}
       https://*.vercel-scripts.com
       https://vercel.live
-      https://*.vercel.live;
+      https://*.vercel.live
+      https://js.stripe.com;
   style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data: https: ${serverEnv.IS_DEVELOPMENT ? "http:" : ""};
   media-src 'self' blob: data:;
   font-src 'self' data:;
-  connect-src 'self';
-  frame-src 'none';
+  connect-src 'self' https://api.stripe.com;
+  frame-src https://js.stripe.com https://hooks.stripe.com;
   frame-ancestors 'none';
   worker-src 'self' blob:;
   object-src 'none';
