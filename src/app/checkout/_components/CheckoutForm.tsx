@@ -28,14 +28,16 @@ function formatAmount(minorUnits: string, minorUnit: number, prefix: string): st
   return `${prefix}${n.toFixed(minorUnit)}`;
 }
 
+// Literal hex values — CSS custom properties don't resolve inside Stripe's iframe.
+// Colors derived from globals.css: --foreground: 0 0% 96%, --muted-foreground: 0 0% 55%, --destructive: 0 84% 60%
 const stripeElementStyle = {
   base: {
-    color: "hsl(var(--foreground))",
+    color: "#f5f5f5",
     fontFamily: "inherit",
     fontSize: "14px",
-    "::placeholder": { color: "hsl(var(--muted-foreground))" },
+    "::placeholder": { color: "#8c8c8c" },
   },
-  invalid: { color: "hsl(var(--destructive))" },
+  invalid: { color: "#ef4343" },
 };
 
 function CheckoutFormInner({ cart }: CheckoutFormProps) {
@@ -361,7 +363,7 @@ function CheckoutFormInner({ cart }: CheckoutFormProps) {
 
 export function CheckoutForm({ cart }: CheckoutFormProps) {
   return (
-    <Elements stripe={stripePromise}>
+    <Elements stripe={stripePromise} options={{ appearance: { theme: "night" } }}>
       <CheckoutFormInner cart={cart} />
     </Elements>
   );
