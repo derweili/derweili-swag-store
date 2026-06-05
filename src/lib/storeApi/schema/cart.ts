@@ -74,12 +74,42 @@ const CartTotalsSchema = z.object({
   currency_suffix: z.string(),
 });
 
+const ShippingRateSchema = z.object({
+  rate_id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  delivery_time: z.string(),
+  price: z.string(),
+  taxes: z.string(),
+  instance_id: z.int(),
+  method_id: z.string(),
+  meta_data: z.array(z.unknown()),
+  selected: z.boolean(),
+  currency_code: z.string(),
+  currency_symbol: z.string(),
+  currency_minor_unit: z.int(),
+  currency_decimal_separator: z.string(),
+  currency_thousand_separator: z.string(),
+  currency_prefix: z.string(),
+  currency_suffix: z.string(),
+});
+
+const ShippingPackageSchema = z.object({
+  package_id: z.union([z.int(), z.string()]),
+  name: z.string(),
+  shipping_rates: z.array(ShippingRateSchema),
+});
+
 export const CartWithProductsSchema = z.object({
   items: z.array(CartItemSchema),
   items_count: z.int(),
   totals: CartTotalsSchema,
   errors: z.array(z.unknown()),
+  shipping_rates: z.array(ShippingPackageSchema),
 });
+
+export type ShippingRate = z.infer<typeof ShippingRateSchema>;
+export type ShippingPackage = z.infer<typeof ShippingPackageSchema>;
 
 export type Cart = z.infer<typeof CartWithProductsSchema>;
 export type CartItem = z.infer<typeof CartItemSchema>;

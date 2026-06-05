@@ -57,6 +57,39 @@ export const updateCartItem = async (
   return cart;
 };
 
+export const updateCartCustomer = async (
+  token: string,
+  shippingAddress: { postcode: string; country: string; state: string },
+): Promise<Cart> => {
+  const { data: cart } = await fetchApi(
+    "/cart/update-customer",
+    {
+      method: "POST",
+      body: JSON.stringify({ shipping_address: shippingAddress }),
+      headers: cartHeaders(token),
+    },
+    CartWithProductsSchema,
+  );
+  return cart;
+};
+
+export const selectCartShippingRate = async (
+  token: string,
+  packageId: string | number,
+  rateId: string,
+): Promise<Cart> => {
+  const { data: cart } = await fetchApi(
+    "/cart/select-shipping-rate",
+    {
+      method: "POST",
+      body: JSON.stringify({ package_id: packageId, rate_id: rateId }),
+      headers: cartHeaders(token),
+    },
+    CartWithProductsSchema,
+  );
+  return cart;
+};
+
 export const deleteCartItem = async (
   token: string,
   itemKey: string,

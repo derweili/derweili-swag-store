@@ -7,6 +7,8 @@ import {
   addItemToCart,
   deleteCartItem,
   fetchCart,
+  selectCartShippingRate,
+  updateCartCustomer,
   updateCartItem as updateCartItemApi,
 } from "../storeApi/fetchCart";
 import type { Cart } from "../storeApi/schema/cart";
@@ -75,6 +77,25 @@ export async function removeCartItem(itemId: string): Promise<Cart> {
     }
     throw err;
   }
+}
+
+export async function updateShippingAddress(
+  postcode: string,
+  country: string,
+  state: string,
+): Promise<Cart> {
+  const cartToken = await getCartToken();
+  if (!cartToken) throw new Error("No active cart found");
+  return updateCartCustomer(cartToken, { postcode, country, state });
+}
+
+export async function selectShippingRate(
+  packageId: string | number,
+  rateId: string,
+): Promise<Cart> {
+  const cartToken = await getCartToken();
+  if (!cartToken) throw new Error("No active cart found");
+  return selectCartShippingRate(cartToken, packageId, rateId);
 }
 
 export async function placeOrder(
