@@ -2,27 +2,37 @@
 
 import { X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export function CartDrawer({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const cartPathname = useRef(pathname);
   const [visible, setVisible] = useState(false);
+
+  const isOnCart = pathname === "/cart";
 
   const close = useCallback(() => {
     setVisible(false);
     setTimeout(() => router.back(), 300);
   }, [router]);
 
+  // Drive visibility from whether the URL is /cart. This correctly handles:
+  // - Initial open: isOnCart becomes true → animate in + lock scroll
+  // - Forward navigation (e.g. to /checkout): isOnCart becomes false → animate out + unlock
+  // - Re-opening cart after forward navigation: isOnCart becomes true again → animate in
   useEffect(() => {
-    document.body.style.overflow = "hidden";
-    const raf = requestAnimationFrame(() => setVisible(true));
-    return () => {
-      cancelAnimationFrame(raf);
+    if (isOnCart) {
+      document.body.style.overflow = "hidden";
+      const raf = requestAnimationFrame(() => setVisible(true));
+      return () => {
+        cancelAnimationFrame(raf);
+        document.body.style.overflow = "";
+      };
+    } else {
+      setVisible(false);
       document.body.style.overflow = "";
-    };
-  }, []);
+    }
+  }, [isOnCart]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -31,15 +41,6 @@ export function CartDrawer({ children }: { children: React.ReactNode }) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [close]);
-
-  // When the user navigates forward (e.g. to /checkout), the @modal slot may
-  // stay mounted. Detect the pathname change and animate out without router.back().
-  useEffect(() => {
-    if (pathname !== cartPathname.current) {
-      setVisible(false);
-      document.body.style.overflow = "";
-    }
-  }, [pathname]);
 
   return (
     <>
