@@ -21,12 +21,13 @@ const PaymentResultSchema = z.object({
 });
 
 export const CheckoutOrderSchema = z.object({
-  id: z.int(),
+  order_id: z.int(),
+  order_number: z.string(),
   status: z.string(),
   billing_address: CheckoutAddressSchema,
   shipping_address: CheckoutAddressSchema,
   payment_method: z.string(),
-  payment_result: PaymentResultSchema,
+  payment_result: z.nullable(PaymentResultSchema),
 });
 
 export type CheckoutOrder = z.infer<typeof CheckoutOrderSchema>;

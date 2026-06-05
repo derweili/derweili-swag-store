@@ -49,7 +49,7 @@ export function CheckoutForm({ cart }: CheckoutFormProps) {
     startTransition(async () => {
       try {
         const order = await placeOrder(billing);
-        router.push(`/thank-you?orderId=${order.id}`);
+        router.push(`/thank-you?orderId=${order.order_number}`);
       } catch {
         setError("Something went wrong placing your order. Please try again.");
       }
