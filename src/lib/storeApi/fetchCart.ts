@@ -64,7 +64,7 @@ export const updateCartCustomer = async (
   const { data: cart } = await fetchApi(
     "/cart/update-customer",
     {
-      method: "PUT",
+      method: "POST",
       body: JSON.stringify({ shipping_address: shippingAddress }),
       headers: cartHeaders(token),
     },
