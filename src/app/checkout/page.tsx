@@ -2,25 +2,27 @@ import type { Metadata } from "next";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { fetchCart } from "@/lib/storeApi/fetchCart";
+import { Suspense } from "react";
 import { getCartToken } from "@/lib/cart/cartToken";
+import { fetchCart } from "@/lib/storeApi/fetchCart";
 import { CheckoutForm } from "./_components/CheckoutForm";
-
-export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Checkout",
   robots: { index: false },
 };
 
-const Checkout = async () => {
+async function CheckoutBody() {
   const token = await getCartToken();
+  if (!token) redirect("/cart");
+
   const { cart } = await fetchCart(token);
+  if (cart.items.length === 0) redirect("/cart");
 
-  if (cart.items.length === 0) {
-    redirect("/cart");
-  }
+  return <CheckoutForm cart={cart} />;
+}
 
+export default function Checkout() {
   return (
     <div className="container pt-24 pb-20 max-w-7xl">
       <Link
@@ -34,9 +36,9 @@ const Checkout = async () => {
         Checkout
       </h1>
 
-      <CheckoutForm cart={cart} />
+      <Suspense fallback={<div className="animate-pulse h-96 bg-secondary/20 rounded" />}>
+        <CheckoutBody />
+      </Suspense>
     </div>
   );
-};
-
-export default Checkout;
+}

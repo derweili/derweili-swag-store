@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
 import { ArrowRight, Check, Mail, Package } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
-
-export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Order Confirmed",
   robots: { index: false },
 };
 
-interface ThankYouPageProps {
+async function ThankYouBody({
+  searchParams,
+}: {
   searchParams: Promise<{ orderId?: string }>;
-}
-
-const ThankYou = async ({ searchParams }: ThankYouPageProps) => {
+}) {
   const { orderId } = await searchParams;
 
   return (
@@ -41,9 +40,7 @@ const ThankYou = async ({ searchParams }: ThankYouPageProps) => {
             <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-1">
               Order Number
             </p>
-            <p className="font-display text-2xl font-bold">
-              {orderId ?? "—"}
-            </p>
+            <p className="font-display text-2xl font-bold">{orderId ?? "—"}</p>
           </div>
         </div>
       </div>
@@ -55,9 +52,7 @@ const ThankYou = async ({ searchParams }: ThankYouPageProps) => {
             <p className="font-display text-sm font-bold uppercase tracking-wider mb-1">
               Confirmation
             </p>
-            <p className="text-xs text-muted-foreground">
-              Receipt is on its way to your email.
-            </p>
+            <p className="text-xs text-muted-foreground">Receipt is on its way to your email.</p>
           </div>
         </div>
         <div className="border border-border p-5 flex gap-4">
@@ -82,6 +77,16 @@ const ThankYou = async ({ searchParams }: ThankYouPageProps) => {
       </div>
     </div>
   );
-};
+}
 
-export default ThankYou;
+export default function ThankYou({
+  searchParams,
+}: {
+  searchParams: Promise<{ orderId?: string }>;
+}) {
+  return (
+    <Suspense>
+      <ThankYouBody searchParams={searchParams} />
+    </Suspense>
+  );
+}
