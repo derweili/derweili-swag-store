@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
-import { placeOrder, selectShippingRate } from "@/lib/cart/actions";
+import { placeOrder, selectShippingRate, updateShippingAddress } from "@/lib/cart/actions";
 import { stripePromise } from "@/lib/stripe/client";
 import type { BillingAddress } from "@/lib/storeApi/schema/checkout";
 import type { Cart } from "@/lib/storeApi/schema/cart";
@@ -27,6 +27,39 @@ function formatAmount(minorUnits: string, minorUnit: number, prefix: string): st
   const n = parseInt(minorUnits, 10) / Math.pow(10, minorUnit);
   return `${prefix}${n.toFixed(minorUnit)}`;
 }
+
+const COUNTRIES: { code: string; name: string }[] = [
+  { code: "AT", name: "Austria" },
+  { code: "BE", name: "Belgium" },
+  { code: "CA", name: "Canada" },
+  { code: "HR", name: "Croatia" },
+  { code: "CZ", name: "Czech Republic" },
+  { code: "DK", name: "Denmark" },
+  { code: "EE", name: "Estonia" },
+  { code: "FI", name: "Finland" },
+  { code: "FR", name: "France" },
+  { code: "DE", name: "Germany" },
+  { code: "GR", name: "Greece" },
+  { code: "HU", name: "Hungary" },
+  { code: "IE", name: "Ireland" },
+  { code: "IT", name: "Italy" },
+  { code: "LV", name: "Latvia" },
+  { code: "LT", name: "Lithuania" },
+  { code: "LU", name: "Luxembourg" },
+  { code: "MT", name: "Malta" },
+  { code: "NL", name: "Netherlands" },
+  { code: "NO", name: "Norway" },
+  { code: "PL", name: "Poland" },
+  { code: "PT", name: "Portugal" },
+  { code: "RO", name: "Romania" },
+  { code: "SK", name: "Slovakia" },
+  { code: "SI", name: "Slovenia" },
+  { code: "ES", name: "Spain" },
+  { code: "SE", name: "Sweden" },
+  { code: "CH", name: "Switzerland" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "US", name: "United States" },
+];
 
 // Literal hex values — CSS custom properties don't resolve inside Stripe's iframe.
 // Colors derived from globals.css: --foreground: 0 0% 96%, --muted-foreground: 0 0% 55%, --destructive: 0 84% 60%
@@ -47,12 +80,27 @@ function CheckoutFormInner({ cart: initialCart }: CheckoutFormProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [cart, setCart] = useState(initialCart);
+  const [country, setCountry] = useState("DE");
+  const [postcode, setPostcode] = useState("");
+  const [state, setState] = useState("");
 
   const { totals } = cart;
 
   const allRates = cart.shipping_rates.flatMap((pkg) =>
     pkg.shipping_rates.map((rate) => ({ ...rate, packageId: pkg.package_id })),
   );
+
+  function reloadShippingRates(nextPostcode: string, nextCountry: string, nextState: string) {
+    if (!nextPostcode && !nextCountry) return;
+    startTransition(async () => {
+      try {
+        const updated = await updateShippingAddress(nextPostcode, nextCountry, nextState);
+        setCart(updated);
+      } catch {
+        setError("Could not load shipping options for this address. Please check your details.");
+      }
+    });
+  }
 
   function handleShippingChange(packageId: string | number, rateId: string) {
     startTransition(async () => {
@@ -182,14 +230,40 @@ function CheckoutFormInner({ cart: initialCart }: CheckoutFormProps) {
             <Input name="address_1" required placeholder="Address" className="h-14" />
             <Input name="address_2" placeholder="Apartment, suite, etc. (optional)" className="h-14" />
             <div className="grid grid-cols-3 gap-3">
-              <Input name="postcode" required placeholder="Postal code" className="h-14" />
+              <Input
+                name="postcode"
+                required
+                placeholder="Postal code"
+                className="h-14"
+                value={postcode}
+                onChange={(e) => setPostcode(e.target.value)}
+                onBlur={() => reloadShippingRates(postcode, country, state)}
+              />
               <Input name="city" required placeholder="City" className="h-14 col-span-2" />
             </div>
-            <Input name="state" placeholder="State / Province (optional)" className="h-14" />
-            <input type="hidden" name="country" value="DE" />
-            <div className="h-14 flex items-center px-3 border border-border bg-secondary/30 text-muted-foreground text-sm">
-              Germany (DE)
-            </div>
+            <Input
+              name="state"
+              placeholder="State / Province (optional)"
+              className="h-14"
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              onBlur={() => reloadShippingRates(postcode, country, state)}
+            />
+            <select
+              name="country"
+              value={country}
+              onChange={(e) => {
+                setCountry(e.target.value);
+                reloadShippingRates(postcode, e.target.value, state);
+              }}
+              className="h-14 w-full px-3 border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+            >
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name} ({c.code})
+                </option>
+              ))}
+            </select>
             <Input name="phone" placeholder="Phone (optional)" className="h-14" />
           </div>
         </section>
@@ -199,8 +273,11 @@ function CheckoutFormInner({ cart: initialCart }: CheckoutFormProps) {
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight mb-5">
             Shipping Method
           </h2>
+          <div className={isPending ? "opacity-50 pointer-events-none" : undefined}>
           {allRates.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No shipping methods available.</p>
+            <p className="text-sm text-muted-foreground">
+              {postcode ? "No shipping methods available for this address." : "Enter your address to see shipping options."}
+            </p>
           ) : (
             <div className="border border-border divide-y divide-border">
               {allRates.map((rate) => {
@@ -241,6 +318,7 @@ function CheckoutFormInner({ cart: initialCart }: CheckoutFormProps) {
               })}
             </div>
           )}
+          </div>
         </section>
 
         {/* Payment — Stripe Elements */}

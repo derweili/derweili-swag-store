@@ -57,6 +57,22 @@ export const updateCartItem = async (
   return cart;
 };
 
+export const updateCartCustomer = async (
+  token: string,
+  shippingAddress: { postcode: string; country: string; state: string },
+): Promise<Cart> => {
+  const { data: cart } = await fetchApi(
+    "/cart/update-customer",
+    {
+      method: "PUT",
+      body: JSON.stringify({ shipping_address: shippingAddress }),
+      headers: cartHeaders(token),
+    },
+    CartWithProductsSchema,
+  );
+  return cart;
+};
+
 export const selectCartShippingRate = async (
   token: string,
   packageId: string | number,
