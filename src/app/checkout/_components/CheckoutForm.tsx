@@ -170,13 +170,10 @@ function CheckoutFormInner({ cart }: CheckoutFormProps) {
               <Input name="city" required placeholder="City" className="h-14 col-span-2" />
             </div>
             <Input name="state" placeholder="State / Province (optional)" className="h-14" />
-            <Input
-              name="country"
-              required
-              placeholder="Country"
-              defaultValue="DE"
-              className="h-14"
-            />
+            <input type="hidden" name="country" value="DE" />
+            <div className="h-14 flex items-center px-3 border border-border bg-secondary/30 text-muted-foreground text-sm">
+              Germany (DE)
+            </div>
             <Input name="phone" placeholder="Phone (optional)" className="h-14" />
           </div>
         </section>
