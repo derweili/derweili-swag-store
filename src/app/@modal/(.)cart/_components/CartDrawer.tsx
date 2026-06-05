@@ -1,11 +1,13 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function CartDrawer({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const cartPathname = useRef(pathname);
   const [visible, setVisible] = useState(false);
 
   const close = useCallback(() => {
@@ -29,6 +31,15 @@ export function CartDrawer({ children }: { children: React.ReactNode }) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [close]);
+
+  // When the user navigates forward (e.g. to /checkout), the @modal slot may
+  // stay mounted. Detect the pathname change and animate out without router.back().
+  useEffect(() => {
+    if (pathname !== cartPathname.current) {
+      setVisible(false);
+      document.body.style.overflow = "";
+    }
+  }, [pathname]);
 
   return (
     <>
