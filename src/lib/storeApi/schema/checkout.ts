@@ -23,6 +23,7 @@ const PaymentResultSchema = z.object({
 export const CheckoutOrderSchema = z.object({
   order_id: z.int(),
   order_number: z.string(),
+  order_key: z.string(),
   status: z.string(),
   billing_address: CheckoutAddressSchema,
   shipping_address: CheckoutAddressSchema,

@@ -6,15 +6,13 @@ import { FetchApiHttpError } from "../storeApi/fetchApi";
 import {
   addItemToCart,
   deleteCartItem,
+  fetchCart,
   updateCartItem as updateCartItemApi,
 } from "../storeApi/fetchCart";
 import type { Cart } from "../storeApi/schema/cart";
-import type {
-  BillingAddress,
-  CheckoutOrder,
-  ShippingAddress,
-} from "../storeApi/schema/checkout";
+import type { BillingAddress, ShippingAddress } from "../storeApi/schema/checkout";
 import { clearCartToken, getCartToken, getOrCreateCartToken } from "./cartToken";
+import { setOrderConfirmation } from "./orderConfirmation";
 
 function revalidateCartSurfaces() {
   revalidatePath("/cart");
@@ -81,9 +79,12 @@ export async function removeCartItem(itemId: string): Promise<Cart> {
 
 export async function placeOrder(
   billingAddress: BillingAddress,
-): Promise<CheckoutOrder> {
+): Promise<{ orderKey: string }> {
   const cartToken = await getCartToken();
   if (!cartToken) throw new Error("No active cart found");
+
+  // Snapshot the cart before it's cleared — needed for the thank-you page
+  const { cart } = await fetchCart(cartToken);
 
   const shippingAddress: ShippingAddress = {
     first_name: billingAddress.first_name,
@@ -99,8 +100,40 @@ export async function placeOrder(
 
   const order = await submitCheckout(cartToken, billingAddress, shippingAddress);
 
+  await setOrderConfirmation({
+    orderKey: order.order_key,
+    orderNumber: order.order_number,
+    billingAddress: {
+      firstName: billingAddress.first_name,
+      lastName: billingAddress.last_name,
+      address1: billingAddress.address_1,
+      address2: billingAddress.address_2,
+      city: billingAddress.city,
+      postcode: billingAddress.postcode,
+      country: billingAddress.country,
+      email: billingAddress.email,
+    },
+    items: cart.items.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      imageUrl: item.images[0]?.src ?? null,
+      lineTotal: item.totals.line_total,
+      currencyPrefix: item.totals.currency_prefix,
+      currencyMinorUnit: item.totals.currency_minor_unit,
+    })),
+    totals: {
+      subtotal: cart.totals.total_items,
+      shipping: cart.totals.total_shipping,
+      tax: cart.totals.total_tax,
+      total: cart.totals.total_price,
+      currencyPrefix: cart.totals.currency_prefix,
+      currencyMinorUnit: cart.totals.currency_minor_unit,
+      currencyCode: cart.totals.currency_code,
+    },
+  });
+
   await clearCartToken();
   revalidatePath("/cart");
 
-  return order;
+  return { orderKey: order.order_key };
 }
