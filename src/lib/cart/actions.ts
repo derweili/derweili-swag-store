@@ -10,7 +10,7 @@ import {
   updateCartItem as updateCartItemApi,
 } from "../storeApi/fetchCart";
 import type { Cart } from "../storeApi/schema/cart";
-import type { BillingAddress, ShippingAddress } from "../storeApi/schema/checkout";
+import type { BillingAddress, PaymentDataEntry, PaymentResult, ShippingAddress } from "../storeApi/schema/checkout";
 import { clearCartToken, getCartToken, getOrCreateCartToken } from "./cartToken";
 import { setOrderConfirmation } from "./orderConfirmation";
 
@@ -79,7 +79,9 @@ export async function removeCartItem(itemId: string): Promise<Cart> {
 
 export async function placeOrder(
   billingAddress: BillingAddress,
-): Promise<{ orderKey: string }> {
+  paymentMethod: string,
+  paymentData: PaymentDataEntry[],
+): Promise<{ orderKey: string; paymentResult: PaymentResult | null }> {
   const cartToken = await getCartToken();
   if (!cartToken) throw new Error("No active cart found");
 
@@ -98,7 +100,13 @@ export async function placeOrder(
     country: billingAddress.country,
   };
 
-  const order = await submitCheckout(cartToken, billingAddress, shippingAddress);
+  const order = await submitCheckout(
+    cartToken,
+    billingAddress,
+    shippingAddress,
+    paymentMethod,
+    paymentData,
+  );
 
   await setOrderConfirmation({
     orderKey: order.order_key,
@@ -135,5 +143,5 @@ export async function placeOrder(
   await clearCartToken();
   revalidatePath("/cart");
 
-  return { orderKey: order.order_key };
+  return { orderKey: order.order_key, paymentResult: order.payment_result };
 }

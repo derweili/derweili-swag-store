@@ -14,10 +14,15 @@ const CheckoutAddressSchema = z.object({
   phone: z.optional(z.string()),
 });
 
+const PaymentDetailSchema = z.object({
+  key: z.string(),
+  value: z.unknown(),
+});
+
 const PaymentResultSchema = z.object({
   payment_status: z.string(),
   redirect_url: z.string(),
-  payment_details: z.array(z.unknown()),
+  payment_details: z.array(PaymentDetailSchema),
 });
 
 export const CheckoutOrderSchema = z.object({
@@ -32,6 +37,9 @@ export const CheckoutOrderSchema = z.object({
 });
 
 export type CheckoutOrder = z.infer<typeof CheckoutOrderSchema>;
+export type PaymentResult = NonNullable<CheckoutOrder["payment_result"]>;
+
+export type PaymentDataEntry = { key: string; value: string | boolean };
 
 export type BillingAddress = {
   first_name: string;

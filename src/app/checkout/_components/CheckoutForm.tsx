@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  CardCvcElement,
+  CardExpiryElement,
+  CardNumberElement,
+  Elements,
+  useElements,
+  useStripe,
+} from "@stripe/react-stripe-js";
 import { Lock, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -7,6 +15,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { placeOrder } from "@/lib/cart/actions";
+import { stripePromise } from "@/lib/stripe/client";
 import type { BillingAddress } from "@/lib/storeApi/schema/checkout";
 import type { Cart } from "@/lib/storeApi/schema/cart";
 
@@ -19,8 +28,20 @@ function formatAmount(minorUnits: string, minorUnit: number, prefix: string): st
   return `${prefix}${n.toFixed(minorUnit)}`;
 }
 
-export function CheckoutForm({ cart }: CheckoutFormProps) {
+const stripeElementStyle = {
+  base: {
+    color: "hsl(var(--foreground))",
+    fontFamily: "inherit",
+    fontSize: "14px",
+    "::placeholder": { color: "hsl(var(--muted-foreground))" },
+  },
+  invalid: { color: "hsl(var(--destructive))" },
+};
+
+function CheckoutFormInner({ cart }: CheckoutFormProps) {
   const router = useRouter();
+  const stripe = useStripe();
+  const elements = useElements();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -28,6 +49,8 @@ export function CheckoutForm({ cart }: CheckoutFormProps) {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!stripe || !elements) return;
+
     const fd = new FormData(e.currentTarget);
     const get = (key: string) => (fd.get(key) as string) ?? "";
 
@@ -48,7 +71,57 @@ export function CheckoutForm({ cart }: CheckoutFormProps) {
     setError(null);
     startTransition(async () => {
       try {
-        const { orderKey } = await placeOrder(billing);
+        const cardNumber = elements.getElement(CardNumberElement);
+        if (!cardNumber) throw new Error("Card element not mounted");
+
+        const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
+          type: "card",
+          card: cardNumber,
+          billing_details: {
+            name: `${billing.first_name} ${billing.last_name}`.trim(),
+            email: billing.email,
+            phone: billing.phone || undefined,
+            address: {
+              line1: billing.address_1,
+              line2: billing.address_2 || undefined,
+              city: billing.city,
+              state: billing.state || undefined,
+              postal_code: billing.postcode,
+              country: billing.country,
+            },
+          },
+        });
+
+        if (pmError) {
+          setError(pmError.message ?? "Card validation failed.");
+          return;
+        }
+
+        const paymentData = [
+          { key: "payment_method", value: "stripe" },
+          { key: "wc-stripe-payment-method", value: paymentMethod.id },
+          { key: "wc-stripe-is-deferred-intent", value: true },
+        ];
+
+        const { orderKey, paymentResult } = await placeOrder(billing, "stripe", paymentData);
+
+        if (paymentResult?.payment_status === "requires_action") {
+          const clientSecret = paymentResult.payment_details.find(
+            (d) => d.key === "client_secret",
+          )?.value as string | undefined;
+
+          if (!clientSecret) {
+            setError("3D Secure authentication required but no client secret received.");
+            return;
+          }
+
+          const { error: confirmError } = await stripe.confirmCardPayment(clientSecret);
+          if (confirmError) {
+            setError(confirmError.message ?? "3D Secure authentication failed.");
+            return;
+          }
+        }
+
         router.push(`/thank-you?key=${encodeURIComponent(orderKey)}`);
       } catch {
         setError("Something went wrong placing your order. Please try again.");
@@ -106,7 +179,7 @@ export function CheckoutForm({ cart }: CheckoutFormProps) {
           </div>
         </section>
 
-        {/* Shipping method — static UI, not yet wired to WooCommerce shipping zones */}
+        {/* Shipping method — static UI */}
         <section>
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight mb-5">
             Shipping Method
@@ -130,7 +203,7 @@ export function CheckoutForm({ cart }: CheckoutFormProps) {
           </div>
         </section>
 
-        {/* Payment — placeholder, payment gateway to be integrated */}
+        {/* Payment — Stripe Elements */}
         <section>
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight mb-2">
             Payment
@@ -138,8 +211,37 @@ export function CheckoutForm({ cart }: CheckoutFormProps) {
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-5 flex items-center gap-2">
             <Lock className="h-3 w-3" /> All transactions are secure and encrypted
           </p>
-          <div className="border border-border p-4 text-sm text-muted-foreground">
-            Payment gateway integration coming soon.
+
+          <div className="border border-border divide-y divide-border">
+            <div className="p-4">
+              <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                Card number
+              </label>
+              <CardNumberElement
+                options={{ style: stripeElementStyle, showIcon: true }}
+                className="py-2"
+              />
+            </div>
+            <div className="grid grid-cols-2 divide-x divide-border">
+              <div className="p-4">
+                <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                  Expiry
+                </label>
+                <CardExpiryElement
+                  options={{ style: stripeElementStyle }}
+                  className="py-2"
+                />
+              </div>
+              <div className="p-4">
+                <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                  CVC
+                </label>
+                <CardCvcElement
+                  options={{ style: stripeElementStyle }}
+                  className="py-2"
+                />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -153,7 +255,7 @@ export function CheckoutForm({ cart }: CheckoutFormProps) {
           type="submit"
           variant="neon"
           size="lg"
-          disabled={isPending || cart.items.length === 0}
+          disabled={isPending || !stripe || cart.items.length === 0}
           className="w-full h-16 text-base"
         >
           {isPending
@@ -254,5 +356,13 @@ export function CheckoutForm({ cart }: CheckoutFormProps) {
         </div>
       </aside>
     </div>
+  );
+}
+
+export function CheckoutForm({ cart }: CheckoutFormProps) {
+  return (
+    <Elements stripe={stripePromise}>
+      <CheckoutFormInner cart={cart} />
+    </Elements>
   );
 }
