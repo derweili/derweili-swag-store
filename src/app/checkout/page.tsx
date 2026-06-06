@@ -13,6 +13,11 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+// This route reads cart cookies and creates a draft order + PaymentIntent as
+// a side effect on every load — prerendering a shell would risk reusing
+// stale draft-order/PaymentIntent state and corrupting payment finalization.
+export const dynamic = "force-dynamic";
+
 async function CheckoutBody() {
   const token = await getCartToken();
   if (!token) redirect("/cart");
