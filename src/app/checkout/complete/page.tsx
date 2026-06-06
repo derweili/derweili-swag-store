@@ -8,10 +8,6 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-// This route reads searchParams/cookies and finalizes the order on every
-// load — must never be served from a stale prerendered shell.
-export const dynamic = "force-dynamic";
-
 async function CheckoutCompleteBody({
   searchParams,
 }: {
