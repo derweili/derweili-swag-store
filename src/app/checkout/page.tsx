@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { prepareCheckout } from "@/lib/cart/actions";
 import { getCartToken } from "@/lib/cart/cartToken";
 import { fetchCart } from "@/lib/storeApi/fetchCart";
 import { CheckoutForm } from "./_components/CheckoutForm";
@@ -19,7 +20,18 @@ async function CheckoutBody() {
   const { cart } = await fetchCart(token);
   if (cart.items.length === 0) redirect("/cart");
 
-  return <CheckoutForm cart={cart} />;
+  const { orderId, orderKey, clientSecret, publishableKey } =
+    await prepareCheckout();
+
+  return (
+    <CheckoutForm
+      cart={cart}
+      orderId={orderId}
+      orderKey={orderKey}
+      clientSecret={clientSecret}
+      publishableKey={publishableKey}
+    />
+  );
 }
 
 export default function Checkout() {
@@ -36,7 +48,11 @@ export default function Checkout() {
         Checkout
       </h1>
 
-      <Suspense fallback={<div className="animate-pulse h-96 bg-secondary/20 rounded" />}>
+      <Suspense
+        fallback={
+          <div className="animate-pulse h-96 bg-secondary/20 rounded" />
+        }
+      >
         <CheckoutBody />
       </Suspense>
     </div>

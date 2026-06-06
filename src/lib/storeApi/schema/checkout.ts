@@ -25,6 +25,25 @@ const PaymentResultSchema = z.object({
   payment_details: z.array(PaymentDetailSchema),
 });
 
+export const CheckoutDraftSchema = z.object({
+  order_id: z.int(),
+  order_key: z.string(),
+  billing_address: CheckoutAddressSchema,
+  shipping_address: CheckoutAddressSchema,
+});
+
+export type CheckoutDraft = z.infer<typeof CheckoutDraftSchema>;
+
+export const PaymentIntentSchema = z.object({
+  client_secret: z.string(),
+  payment_intent_id: z.string(),
+  publishable_key: z.string(),
+  amount: z.int(),
+  currency: z.string(),
+});
+
+export type PaymentIntent = z.infer<typeof PaymentIntentSchema>;
+
 export const CheckoutOrderSchema = z.object({
   order_id: z.int(),
   order_number: z.string(),
