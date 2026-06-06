@@ -1,46 +1,45 @@
 "use client";
 
 import {
-  CardCvcElement,
-  CardExpiryElement,
-  CardNumberElement,
   Elements,
+  PaymentElement,
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
 import { Lock, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
-import { placeOrder } from "@/lib/cart/actions";
-import { stripePromise } from "@/lib/stripe/client";
-import type { BillingAddress } from "@/lib/storeApi/schema/checkout";
+import { placeOrder, savePendingCheckout } from "@/lib/cart/actions";
 import type { Cart } from "@/lib/storeApi/schema/cart";
+import type { BillingAddress } from "@/lib/storeApi/schema/checkout";
+import { getStripe } from "@/lib/stripe/client";
 
 interface CheckoutFormProps {
   cart: Cart;
+  orderId: number;
+  orderKey: string;
+  clientSecret: string;
+  publishableKey: string;
 }
 
-function formatAmount(minorUnits: string, minorUnit: number, prefix: string): string {
-  const n = parseInt(minorUnits, 10) / Math.pow(10, minorUnit);
+function formatAmount(
+  minorUnits: string,
+  minorUnit: number,
+  prefix: string,
+): string {
+  const n = parseInt(minorUnits, 10) / 10 ** minorUnit;
   return `${prefix}${n.toFixed(minorUnit)}`;
 }
 
-// Literal hex values — CSS custom properties don't resolve inside Stripe's iframe.
-// Colors derived from globals.css: --foreground: 0 0% 96%, --muted-foreground: 0 0% 55%, --destructive: 0 84% 60%
-const stripeElementStyle = {
-  base: {
-    color: "#f5f5f5",
-    fontFamily: "inherit",
-    fontSize: "14px",
-    "::placeholder": { color: "#8c8c8c" },
-  },
-  invalid: { color: "#ef4343" },
-};
-
-function CheckoutFormInner({ cart }: CheckoutFormProps) {
+function CheckoutFormInner({
+  cart,
+  orderId,
+  orderKey,
+  publishableKey,
+}: Omit<CheckoutFormProps, "clientSecret">) {
   const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
@@ -73,58 +72,74 @@ function CheckoutFormInner({ cart }: CheckoutFormProps) {
     setError(null);
     startTransition(async () => {
       try {
-        const cardNumber = elements.getElement(CardNumberElement);
-        if (!cardNumber) throw new Error("Card element not mounted");
-
-        const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
-          type: "card",
-          card: cardNumber,
-          billing_details: {
-            name: `${billing.first_name} ${billing.last_name}`.trim(),
-            email: billing.email,
-            phone: billing.phone || undefined,
-            address: {
-              line1: billing.address_1,
-              line2: billing.address_2 || undefined,
-              city: billing.city,
-              state: billing.state || undefined,
-              postal_code: billing.postcode,
-              country: billing.country,
-            },
-          },
-        });
-
-        if (pmError) {
-          setError(pmError.message ?? "Card validation failed.");
+        const { error: submitError } = await elements.submit();
+        if (submitError) {
+          setError(submitError.message ?? "Please check your payment details.");
           return;
         }
 
-        const paymentData = [
-          { key: "payment_method", value: "stripe" },
-          { key: "wc-stripe-payment-method", value: paymentMethod.id },
-          { key: "wc-stripe-is-deferred-intent", value: true },
-        ];
+        // Persisted so /checkout/complete can finalize the order if the
+        // customer is redirected away to their bank (iDEAL, Bancontact, …).
+        await savePendingCheckout(orderId, orderKey, publishableKey, billing);
 
-        const { orderKey, paymentResult } = await placeOrder(billing, "stripe", paymentData);
+        const returnUrl = new URL("/checkout/complete", window.location.origin);
+        returnUrl.searchParams.set("order_id", String(orderId));
+        returnUrl.searchParams.set("order_key", orderKey);
 
-        if (paymentResult?.payment_status === "requires_action") {
-          const clientSecret = paymentResult.payment_details.find(
+        const { error: confirmError } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            return_url: returnUrl.toString(),
+            payment_method_data: {
+              billing_details: {
+                name: `${billing.first_name} ${billing.last_name}`.trim(),
+                email: billing.email,
+                phone: billing.phone || undefined,
+                address: {
+                  line1: billing.address_1,
+                  line2: billing.address_2 || undefined,
+                  city: billing.city,
+                  state: billing.state || undefined,
+                  postal_code: billing.postcode,
+                  country: billing.country,
+                },
+              },
+            },
+          },
+          redirect: "if_required",
+        });
+
+        if (confirmError) {
+          setError(confirmError.message ?? "Payment failed. Please try again.");
+          return;
+        }
+
+        // No redirect occurred — the payment resolved inline (e.g. cards).
+        const { orderKey: finalOrderKey, paymentResult } =
+          await placeOrder(billing);
+
+        if (paymentResult?.payment_status === "pending") {
+          const pendingClientSecret = paymentResult.payment_details.find(
             (d) => d.key === "client_secret",
           )?.value as string | undefined;
 
-          if (!clientSecret) {
-            setError("3D Secure authentication required but no client secret received.");
-            return;
-          }
-
-          const { error: confirmError } = await stripe.confirmCardPayment(clientSecret);
-          if (confirmError) {
-            setError(confirmError.message ?? "3D Secure authentication failed.");
-            return;
+          if (pendingClientSecret) {
+            const { error: pendingConfirmError } = await stripe.confirmPayment({
+              clientSecret: pendingClientSecret,
+              confirmParams: { return_url: returnUrl.toString() },
+              redirect: "if_required",
+            });
+            if (pendingConfirmError) {
+              setError(
+                pendingConfirmError.message ??
+                  "3D Secure authentication failed.",
+              );
+              return;
+            }
           }
         }
 
-        router.push(`/thank-you?key=${encodeURIComponent(orderKey)}`);
+        router.push(`/thank-you?key=${encodeURIComponent(finalOrderKey)}`);
       } catch {
         setError("Something went wrong placing your order. Please try again.");
       }
@@ -159,22 +174,63 @@ function CheckoutFormInner({ cart }: CheckoutFormProps) {
           </h2>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <Input name="first_name" required placeholder="First name" className="h-14" />
-              <Input name="last_name" required placeholder="Last name" className="h-14" />
+              <Input
+                name="first_name"
+                required
+                placeholder="First name"
+                className="h-14"
+              />
+              <Input
+                name="last_name"
+                required
+                placeholder="Last name"
+                className="h-14"
+              />
             </div>
-            <Input name="company" placeholder="Company (optional)" className="h-14" />
-            <Input name="address_1" required placeholder="Address" className="h-14" />
-            <Input name="address_2" placeholder="Apartment, suite, etc. (optional)" className="h-14" />
+            <Input
+              name="company"
+              placeholder="Company (optional)"
+              className="h-14"
+            />
+            <Input
+              name="address_1"
+              required
+              placeholder="Address"
+              className="h-14"
+            />
+            <Input
+              name="address_2"
+              placeholder="Apartment, suite, etc. (optional)"
+              className="h-14"
+            />
             <div className="grid grid-cols-3 gap-3">
-              <Input name="postcode" required placeholder="Postal code" className="h-14" />
-              <Input name="city" required placeholder="City" className="h-14 col-span-2" />
+              <Input
+                name="postcode"
+                required
+                placeholder="Postal code"
+                className="h-14"
+              />
+              <Input
+                name="city"
+                required
+                placeholder="City"
+                className="h-14 col-span-2"
+              />
             </div>
-            <Input name="state" placeholder="State / Province (optional)" className="h-14" />
+            <Input
+              name="state"
+              placeholder="State / Province (optional)"
+              className="h-14"
+            />
             <input type="hidden" name="country" value="DE" />
             <div className="h-14 flex items-center px-3 border border-border bg-secondary/30 text-muted-foreground text-sm">
               Germany (DE)
             </div>
-            <Input name="phone" placeholder="Phone (optional)" className="h-14" />
+            <Input
+              name="phone"
+              placeholder="Phone (optional)"
+              className="h-14"
+            />
           </div>
         </section>
 
@@ -186,7 +242,12 @@ function CheckoutFormInner({ cart }: CheckoutFormProps) {
           <div className="border border-border divide-y divide-border">
             <label className="flex items-center justify-between p-4 cursor-pointer hover:bg-secondary/40 transition">
               <div className="flex items-center gap-3">
-                <input type="radio" name="ship" defaultChecked className="accent-accent" />
+                <input
+                  type="radio"
+                  name="ship"
+                  defaultChecked
+                  className="accent-accent"
+                />
                 <span className="font-display uppercase text-sm tracking-wider">
                   Standard (3–5 days)
                 </span>
@@ -195,52 +256,29 @@ function CheckoutFormInner({ cart }: CheckoutFormProps) {
                 {totals.total_shipping === null
                   ? "Calculated at next step"
                   : totals.total_shipping === "0"
-                  ? "FREE"
-                  : formatAmount(totals.total_shipping, totals.currency_minor_unit, totals.currency_prefix)}
+                    ? "FREE"
+                    : formatAmount(
+                        totals.total_shipping,
+                        totals.currency_minor_unit,
+                        totals.currency_prefix,
+                      )}
               </span>
             </label>
           </div>
         </section>
 
-        {/* Payment — Stripe Elements */}
+        {/* Payment — Stripe Payment Element */}
         <section>
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight mb-2">
             Payment
           </h2>
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-5 flex items-center gap-2">
-            <Lock className="h-3 w-3" /> All transactions are secure and encrypted
+            <Lock className="h-3 w-3" /> All transactions are secure and
+            encrypted
           </p>
 
-          <div className="border border-border divide-y divide-border">
-            <div className="p-4">
-              <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                Card number
-              </label>
-              <CardNumberElement
-                options={{ style: stripeElementStyle, showIcon: true }}
-                className="py-2"
-              />
-            </div>
-            <div className="grid grid-cols-2 divide-x divide-border">
-              <div className="p-4">
-                <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                  Expiry
-                </label>
-                <CardExpiryElement
-                  options={{ style: stripeElementStyle }}
-                  className="py-2"
-                />
-              </div>
-              <div className="p-4">
-                <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                  CVC
-                </label>
-                <CardCvcElement
-                  options={{ style: stripeElementStyle }}
-                  className="py-2"
-                />
-              </div>
-            </div>
+          <div className="border border-border p-4">
+            <PaymentElement options={{ layout: "tabs" }} />
           </div>
         </section>
 
@@ -254,7 +292,9 @@ function CheckoutFormInner({ cart }: CheckoutFormProps) {
           type="submit"
           variant="neon"
           size="lg"
-          disabled={isPending || !stripe || cart.items.length === 0}
+          disabled={
+            isPending || !stripe || !elements || cart.items.length === 0
+          }
           className="w-full h-16 text-base"
         >
           {isPending
@@ -320,7 +360,11 @@ function CheckoutFormInner({ cart }: CheckoutFormProps) {
             <div className="flex justify-between text-muted-foreground">
               <span className="uppercase tracking-wider text-xs">Subtotal</span>
               <span>
-                {formatAmount(totals.total_items, totals.currency_minor_unit, totals.currency_prefix)}
+                {formatAmount(
+                  totals.total_items,
+                  totals.currency_minor_unit,
+                  totals.currency_prefix,
+                )}
               </span>
             </div>
             <div className="flex justify-between text-muted-foreground">
@@ -329,26 +373,40 @@ function CheckoutFormInner({ cart }: CheckoutFormProps) {
                 {totals.total_shipping === null
                   ? "—"
                   : totals.total_shipping === "0"
-                  ? "FREE"
-                  : formatAmount(totals.total_shipping, totals.currency_minor_unit, totals.currency_prefix)}
+                    ? "FREE"
+                    : formatAmount(
+                        totals.total_shipping,
+                        totals.currency_minor_unit,
+                        totals.currency_prefix,
+                      )}
               </span>
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span className="uppercase tracking-wider text-xs">Tax</span>
               <span>
-                {formatAmount(totals.total_tax, totals.currency_minor_unit, totals.currency_prefix)}
+                {formatAmount(
+                  totals.total_tax,
+                  totals.currency_minor_unit,
+                  totals.currency_prefix,
+                )}
               </span>
             </div>
           </div>
 
           <div className="flex justify-between items-end border-t border-border pt-4 mt-4">
-            <span className="font-display uppercase tracking-wider text-sm">Total</span>
+            <span className="font-display uppercase tracking-wider text-sm">
+              Total
+            </span>
             <div className="text-right">
               <span className="text-xs text-muted-foreground uppercase mr-2">
                 {totals.currency_code}
               </span>
               <span className="font-display text-3xl font-bold text-accent">
-                {formatAmount(totals.total_price, totals.currency_minor_unit, totals.currency_prefix)}
+                {formatAmount(
+                  totals.total_price,
+                  totals.currency_minor_unit,
+                  totals.currency_prefix,
+                )}
               </span>
             </div>
           </div>
@@ -358,10 +416,29 @@ function CheckoutFormInner({ cart }: CheckoutFormProps) {
   );
 }
 
-export function CheckoutForm({ cart }: CheckoutFormProps) {
+export function CheckoutForm({
+  cart,
+  orderId,
+  orderKey,
+  clientSecret,
+  publishableKey,
+}: CheckoutFormProps) {
+  const stripePromise = useMemo(
+    () => getStripe(publishableKey),
+    [publishableKey],
+  );
+
   return (
-    <Elements stripe={stripePromise} options={{ appearance: { theme: "night" } }}>
-      <CheckoutFormInner cart={cart} />
+    <Elements
+      stripe={stripePromise}
+      options={{ clientSecret, appearance: { theme: "night" } }}
+    >
+      <CheckoutFormInner
+        cart={cart}
+        orderId={orderId}
+        orderKey={orderKey}
+        publishableKey={publishableKey}
+      />
     </Elements>
   );
 }
